@@ -1,10 +1,3 @@
-
-var userList = document.getElementById("dynamic-users-list");
-    
-// Create a form synamically
-var form = document.createElement("form");
-form.setAttribute("class", "generic-form");
-
 var userNumber = 1;
 var account = document.createElement("div");
 account.setAttribute("class", "simple-text");
@@ -27,9 +20,17 @@ publicKey.appendChild(publicKeyString);
 var privateKey = document.createElement("button");
 privateKey.setAttribute("class", "generic-button");
 privateKey.textContent = "Check Private Key"
+privateKey.onclick = CheckUserPassword;
 
-userList.appendChild(form); 
-form.appendChild(account); 
-form.appendChild(keyType); 
-form.appendChild(publicKey); 
-form.appendChild(privateKey); 
+let main = document.getElementById("main");
+
+main.appendChild(account); 
+main.appendChild(keyType); 
+main.appendChild(publicKey); 
+main.appendChild(privateKey); 
+
+
+function CheckUserPassword() {
+        window.location.href = 'check-password.html';
+}
+
