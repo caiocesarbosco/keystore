@@ -1,3 +1,29 @@
+const toPromise = (callback) => {
+    const promise = new Promise((resolve, reject) => {
+        try {
+            callback(resolve, reject);
+        }
+        catch (err) {
+            reject(err);
+        }
+    });
+    return promise;
+}
+
+const storageKey = () => {
+    const key = 'publicKeys';
+    const value = { name: '0x0123456789'};
+
+    const promise = toPromise((resolve, reject) => {
+        chrome.storage.local.set({ [key]: value }, () => {
+            if (chrome.runtime.lastError)
+                reject(chrome.runtime.lastError);
+
+            resolve(value);
+        });
+    });
+} 
+
 let submitButton = document.getElementById("create-wallet-submit-button");
 let message = document.getElementById("create-wallet-feedback-text");
 
@@ -19,6 +45,8 @@ function submitCreateWallet() {
     }else if (password != confirm) {
         message.innerHTML = "Confirmation does not match"
     } else {
+        storageKey();
         window.location.href = 'secret-phrase.html';
     }
 }
+

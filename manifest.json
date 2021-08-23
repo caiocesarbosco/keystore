@@ -4,6 +4,9 @@
    "version":"1.0.0",
    "description":"A Keystore Extension that allows Users encrypting & storing localfiles using their Password as a Masterkey",
    "short_name":"Keystore",
+   "permissions": [
+      "storage"
+   ],
    "browser_action":{
       "default_title":"Keystore for Private Keys Local Storaging",
       "default_popup":"html/entrypoint.html",

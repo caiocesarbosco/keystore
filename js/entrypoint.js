@@ -1,6 +1,4 @@
-var keystoreFounded = false;
-
-if(keystoreFounded === true) {
+if(storageKeyFileExist()) {
     window.location.href = 'user-auth.html';
 }
 
