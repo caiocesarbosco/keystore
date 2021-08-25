@@ -40,3 +40,11 @@ function asciiToUint8Array(str)
         chars.push(str.charCodeAt(i));
     return new Uint8Array(chars);
 }
+
+function hexStringToBufferSource(str, generateArrayBuffer) {
+    var data = hexStringToUint8Array(str);
+    if (generateArrayBuffer) {
+      return data = data.buffer;
+    }
+    return data;
+  }
