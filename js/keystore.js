@@ -33,37 +33,44 @@ async function generateKeyPair() {
 
 async function deriveKey(password) {
 
-    let enc = new TextEncoder();
-    let passwordKey = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits", "deriveKey"]);
+    let salt = asciiToUint8Array("MySalt");
+    let encoder = new TextEncoder();
+    let passwordKey = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits", "deriveKey"]);
 
     var kdfParams = {
         name: "PBKDF2",
-        salt: new Uint8Array(10),
+        salt: salt,
         iterations: 262144,
         hash: "SHA-256"
     };
 
-    var derivedAlgorithm = {name: 'aes-ctr', length: 128};
+    var derivedAlgorithm = {name: 'AES-CBC', length: 128};
     var derivedKey = await crypto.subtle.deriveKey(kdfParams, passwordKey, derivedAlgorithm, true, ['encrypt', 'decrypt']);
+
     return derivedKey;
 }
 
-function encryptsPrivateKeyFile() {
-
-    var data = asciiToUint8Array("hello");
-    var iv = new Uint8Array(16);    
-    var password = "1234";
-    var iv = new Uint8Array(16);
-    var derivedKey = deriveKey(password);
-    crypto.subtle.encrypt({name: 'AES-CTR', iv: iv}, derivedKey, data);
-
-
+async function encryptsPrivateKeyFile(data, key, password) {
+   
+    var iv = asciiToUint8Array("AnyRandomData012");
+    var derivedKey = await deriveKey(password);
+    var cipher = await crypto.subtle.encrypt({name: 'AES-CBC', iv: iv}, key, data);
+    return cipher;
 }
 
 async function test() {
 
-    var derivedKey = await deriveKey("1234");
+    var password = "1234";
+    let privateData = asciiToUint8Array("MyPrivateData");
+    var derivedKey = await deriveKey(password);
+    var cipher = await encryptsPrivateKeyFile(privateData, derivedKey, password);
+    alert(bytesToHexString(cipher));
+    /*var derivedKey = await deriveKey("1234");
     var expKey = await crypto.subtle.exportKey("jwk", derivedKey);
     var stringfiedKey = JSON.stringify(expKey);
-    alert(stringfiedKey);
+    alert(stringfiedKey);*/
+
+
+
+    //encryptsPrivateKeyFile();
 }
