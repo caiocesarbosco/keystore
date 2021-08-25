@@ -1,7 +1,6 @@
 function storageKeyFileExist() {
 
-    test();
-    publicKeys = window.localStorage.getItem("keyStorage");
+    publicKeys = window.localStorage.getItem("keyStore");
 
     if(!publicKeys) {
         return false;
@@ -34,10 +33,10 @@ async function generateKeyPair() {
 async function verifyHmac(key, signData, data) {
 
     let isValid = await crypto.subtle.verify({name: 'HMAC'}, key, signData, data);
-    alert(isValid);
+    return isValid;
 }
 
-async function signPrivateKeyFile(data, key) {
+async function signKeyPairFile(data, key) {
     let signed = await crypto.subtle.sign({name: 'HMAC'}, key, data);
     return signed;
 }
@@ -68,20 +67,27 @@ async function deriveKey(password) {
     return derivedKey;
 }
 
-async function encryptsPrivateKeyFile(data, key, password) {
+async function encryptsKeyPairFile(data, key, password) {
    
     var iv = asciiToUint8Array("AnyRandomData012");
     var derivedKey = await deriveKey(password);
-    var cipher = await crypto.subtle.encrypt({name: 'AES-CTR', counter: iv, lenght: 32}, key, data);
+    var cipher = await crypto.subtle.encrypt({name: 'AES-CTR', counter: iv, length: 32}, key, data);
     return cipher;
 }
 
-async function test() {
+async function storingEncryptedUserKeyPairs(password) {
 
-    let privateData = asciiToUint8Array("MyPrivateData");
-    var password = "1234";
-    var derivedKey = await deriveKey(password);
-    var signedData = await signPrivateKeyFile(privateData, derivedKey.sign);
-    let changedPrivateData = asciiToUint8Array("MyChangedPrivateData");
-    await verifyHmac(derivedKey.sign, signedData, changedPrivateData);
+    var mockedContent = {
+        "public": "01234",
+        "private": "56789"
+    }
+    var derivedKeys = await deriveKey(password);
+    var signedData = await signKeyPairFile(asciiToUint8Array(JSON.stringify(mockedContent)), derivedKeys.sign);
+    var encryptedData = await encryptsKeyPairFile(asciiToUint8Array(JSON.stringify(mockedContent)), derivedKeys.encrypt, password);
+    var jsonEncriptedUserKeyPair = {
+        "encrypted": JSON.stringify(encryptedData),
+        "signed": JSON.stringify(signedData)
+    }
+    window.localStorage.setItem("keyStore", JSON.stringify(jsonEncriptedUserKeyPair));
+
 }

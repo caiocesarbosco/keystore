@@ -8,7 +8,7 @@ function cancelCreateWallet() {
     window.location.href = 'entrypoint.html';
 }
 
-function submitCreateWallet() {
+async function submitCreateWallet() {
     const password = document.getElementById("create-password").value;
     const confirm = document.getElementById("confirm-password").value;
 
@@ -19,7 +19,7 @@ function submitCreateWallet() {
     } else if (password != confirm) {
         message.innerHTML = "Confirmation does not match"
     } else {
-        storageKey();
+        await storingEncryptedUserKeyPairs(password);
         window.location.href = 'secret-phrase.html';
     }
 }
