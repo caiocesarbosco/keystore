@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Authentication</title>
   <link rel="stylesheet" href="../css/style.css">
-  <!--script defer src="login-page.js"></script-->
 </head>
 
 <body>
@@ -17,13 +16,22 @@
       <div class="simple-text">
         <p>Password</p>
       </div>
-      <input type="password" id="pwd">
+      <input type="password" id="user-auth-pwd">
     </div>
     
     <div class="generic-form">
-      <input type="submit" value="Submit" class="generic-button">
-      <input type="submit" value="Cancel" class="generic-button">
+      <div class="simple-text" id="user-auth-feedback-text">
+      </div>
     </div>
+
+    <div class="generic-form">
+      <input type="submit" value="Submit" id="user-auth-confirm-button" class="generic-button">
+      <input type="submit" value="Cancel" id="user-auth-cancel-button" class="generic-button">
+    </div>
+
+    <script defer src="../js/utils.js"></script>
+    <script defer src="../js/keystore.js"></script>
+    <script defer src="../js/user-auth.js"></script>
   
   </main>
 </body>

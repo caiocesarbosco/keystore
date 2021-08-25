@@ -81,13 +81,28 @@ async function storingEncryptedUserKeyPairs(password) {
         "public": "01234",
         "private": "56789"
     }
+
     var derivedKeys = await deriveKey(password);
-    var signedData = await signKeyPairFile(asciiToUint8Array(JSON.stringify(mockedContent)), derivedKeys.sign);
     var encryptedData = await encryptsKeyPairFile(asciiToUint8Array(JSON.stringify(mockedContent)), derivedKeys.encrypt, password);
+    var signedData = await signKeyPairFile(encryptedData, derivedKeys.sign);
     var jsonEncriptedUserKeyPair = {
-        "encrypted": JSON.stringify(encryptedData),
-        "signed": JSON.stringify(signedData)
+        "encrypted": bytesToHexString(encryptedData),
+        "signed": bytesToHexString(signedData)
     }
     window.localStorage.setItem("keyStore", JSON.stringify(jsonEncriptedUserKeyPair));
+
+}
+
+async function checkEncryptedUserKeyPair(password) {
+
+    var derivedKeys = await deriveKey(password);
+
+    var encriptedUserKeyPair = window.localStorage.getItem("keyStore");
+
+    var encriptedUserKeyPairObj = JSON.parse(encriptedUserKeyPair);
+
+    var isVerified = await verifyHmac(derivedKeys.sign, hexStringToUint8Array(encriptedUserKeyPairObj.signed), hexStringToUint8Array(encriptedUserKeyPairObj.encrypted));
+
+    return isVerified;
 
 }
