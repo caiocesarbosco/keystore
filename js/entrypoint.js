@@ -1,12 +1,23 @@
-const userButton = document.getElementById("user-id");
-var user = window.localStorage.getItem("Users");
-userButton.value = "Use [" + user + "]";
+const userButtonsParent = document.getElementById("user-buttons");
+var users = getUsers();
+
+if(users.length === 0) {
+    document.getElementById("or-text").style.display = "none";
+}
+
+var idx = 0;
+users.forEach(userKeyring => {
+    var user = document.createElement("button");
+    user.setAttribute("class", "generic-button");
+    user.textContent = "Use [" + userKeyring.user + "]";
+    user.onclick = redirectUserAuth;
+    userButtonsParent.appendChild(user);
+})
 
 
 document.getElementById("create-account-submit").onclick = redirectCreateAccount;
 document.getElementById("import-account-submit").onclick = redirectImportAccount;
 document.getElementById("import-file-submit").onclick = redirectImportFile;
-userButton.onclick = redirectUserAuth;
 
 function redirectCreateAccount() {
     window.location.href = 'create-wallet.html';

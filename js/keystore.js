@@ -1,14 +1,3 @@
-function storageKeyFileExist() {
-
-    publicKeys = window.localStorage.getItem("keyStore");
-
-    if(!publicKeys) {
-        return false;
-    } else {
-        return true;
-    }
-}
-
 async function generateKeyPair() {
 
     // Algorithm Object
@@ -82,7 +71,7 @@ async function decryptsKeyPairFile(data, key) {
     return plainText;
 }
 
-async function storingEncryptedUserKeyPairs(password) {
+async function storingEncryptedUserKeyPairs(user, password) {
 
     var mockedContent = {
         "public": "01234",
@@ -93,10 +82,11 @@ async function storingEncryptedUserKeyPairs(password) {
     var encryptedData = await encryptsKeyPairFile(asciiToUint8Array(JSON.stringify(mockedContent)), derivedKeys.encrypt, password);
     var signedData = await signKeyPairFile(encryptedData, derivedKeys.sign);
     var jsonEncriptedUserKeyPair = {
+        "user": user,
         "encrypted": bytesToHexString(encryptedData),
         "signed": bytesToHexString(signedData)
     }
-    window.localStorage.setItem("keyStore", JSON.stringify(jsonEncriptedUserKeyPair));
+    appendUserKeyStore(jsonEncriptedUserKeyPair); 
 
 }
 
