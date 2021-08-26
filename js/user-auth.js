@@ -1,4 +1,7 @@
 let message = document.getElementById("user-auth-feedback-text");
+let userObj = document.getElementById("user-auth-id");
+let user = getCurrentUser();
+userObj.innerHTML = user;
 
 document.getElementById("user-auth-confirm-button").onclick = checkPassword;
 document.getElementById("user-auth-cancel-button").onclick = cancelCheckPassword;
@@ -16,14 +19,14 @@ async function checkPassword() {
     
     else {
 
-        var validPassword = await checkEncryptedUserKeyPair(password);
+        var validPassword = await checkEncryptedUserKeyPair(user, password);
 
         if(validPassword == false) {
             message.innerHTML = "Confirmation does not match"
         } 
         
         else {
-            var plainText = await decryptUserKeyPairs(password); 
+            var plainText = await decryptUserKeyPairs(user, password); 
             var jsonObj = JSON.parse(plainText);
             window.localStorage.setItem("Users", jsonObj.public);
             window.location.href = 'main.html';

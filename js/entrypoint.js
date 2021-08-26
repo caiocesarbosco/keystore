@@ -1,4 +1,5 @@
-//resetCurrentUser();
+//window.localStorage.clear();
+resetCurrentUser();
 const main = document.getElementById("main");
 var users = getUsers();
 
@@ -41,7 +42,7 @@ function redirectImportAccount() {
 function redirectImportFile() {
 }
 
-function redirectUserAuth() {
-    //setCurrentUser(event.target.id);
+function redirectUserAuth(event) {
+    setCurrentUser(event.target.id);
     window.location.href = 'user-auth.html';
 }

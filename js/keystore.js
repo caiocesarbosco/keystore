@@ -67,7 +67,7 @@ async function encryptsKeyPairFile(data, key, password) {
 async function decryptsKeyPairFile(data, key) {
    
     var iv = asciiToUint8Array("AnyRandomData012");
-    var plainText = await crypto.subtle.encrypt({name: 'AES-CTR', counter: iv, length: 32}, key, data);
+    var plainText = await crypto.subtle.decrypt({name: 'AES-CTR', counter: iv, length: 32}, key, data);
     return plainText;
 }
 
@@ -90,24 +90,21 @@ async function storingEncryptedUserKeyPairs(user, password) {
 
 }
 
-async function decryptUserKeyPairs(password) {
-    var encriptedUserKeyPair = window.localStorage.getItem("keyStore");
-    var encriptedUserKeyPairObj = JSON.parse(encriptedUserKeyPair);
+async function decryptUserKeyPairs(user, password) {
+    var encriptedUserKeyPairObj = getUserKeyRing(user);
     var derivedKeys = await deriveKey(password);
     var plainObj = await decryptsKeyPairFile(hexStringToUint8Array(encriptedUserKeyPairObj.encrypted), derivedKeys.encrypt);
     var plainText = bytesToASCIIString(plainObj);
     return plainText;
 }
 
-async function checkEncryptedUserKeyPair(password) {
+async function checkEncryptedUserKeyPair(user, password) {
 
     var derivedKeys = await deriveKey(password);
 
-    var encriptedUserKeyPair = window.localStorage.getItem("keyStore");
+    var encriptedUserKeyPair = getUserKeyRing(user);
 
-    var encriptedUserKeyPairObj = JSON.parse(encriptedUserKeyPair);
-
-    var isVerified = await verifyHmac(derivedKeys.sign, hexStringToUint8Array(encriptedUserKeyPairObj.signed), hexStringToUint8Array(encriptedUserKeyPairObj.encrypted));
+    var isVerified = await verifyHmac(derivedKeys.sign, hexStringToUint8Array(encriptedUserKeyPair.signed), hexStringToUint8Array(encriptedUserKeyPair.encrypted));
 
     return isVerified;
 

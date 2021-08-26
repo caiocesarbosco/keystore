@@ -6,7 +6,7 @@ function setCurrentUser(user) {
     window.localStorage.setItem("Session-User", user);
 } 
 
-function getCurrentUser(user) {
+function getCurrentUser() {
     let sessionUser = window.localStorage.getItem("Session-User");
     return sessionUser;
 } 
@@ -48,7 +48,7 @@ function getUserKeyRing(user) {
 
     var keyStore = getKeyStoreFile();
     let userStoredKeyring = keyStore.users.filter(userKeyring => userKeyring.user === user);
-    return userStoredKeyring;
+    return userStoredKeyring[0];
 
 }
 
