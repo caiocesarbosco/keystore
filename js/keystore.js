@@ -1,20 +1,23 @@
 async function generateKeyPair() {
 
     // Algorithm Object
-    var algorithmKeyGen = {
-        name: "RSASSA-PKCS1-v1_5",
-        modulusLength: 2048,
-        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),  // Equivalent to 65537
-        hash: {
-        name: "SHA-256"
-        }
+    /*var algorithmKeyGen = {
+        name: "RSA-OAEP",
+        modulusLength: 4096,
+        publicExponent: new Uint8Array([1, 0, 1]),
+        hash: "SHA-256"
     };
     
     var algorithmSign = {
         name: "RSASSA-PKCS1-v1_5"
     };
 
-    var keyPair = await crypto.subtle.generateKey(algorithmKeyGen, true, ["sign"]);
+    var keyPair = await crypto.subtle.generateKey(algorithmKeyGen, true, ["encrypt", "decrypt"]);*/
+    var keyPair = {
+        "publicKey": Math.random(32),
+        "privateKey": Math.random(32)
+    }
+    
     return keyPair;
 
 }
@@ -71,15 +74,10 @@ async function decryptsKeyPairFile(data, key) {
     return plainText;
 }
 
-async function storingEncryptedUserKeyPairs(user, password) {
-
-    var mockedContent = {
-        "public": "01234",
-        "private": "56789"
-    }
+async function storingEncryptedUserKeyPairs(data, user, password) {
 
     var derivedKeys = await deriveKey(password);
-    var encryptedData = await encryptsKeyPairFile(asciiToUint8Array(JSON.stringify(mockedContent)), derivedKeys.encrypt, password);
+    var encryptedData = await encryptsKeyPairFile(asciiToUint8Array(JSON.stringify(data)), derivedKeys.encrypt, password);
     var signedData = await signKeyPairFile(encryptedData, derivedKeys.sign);
     var jsonEncriptedUserKeyPair = {
         "user": user,

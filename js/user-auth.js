@@ -28,7 +28,7 @@ async function checkPassword() {
         else {
             var plainText = await decryptUserKeyPairs(user, password); 
             var jsonObj = JSON.parse(plainText);
-            window.localStorage.setItem("Users", jsonObj.public);
+            window.localStorage.setItem("Session-PublicKey", jsonObj.public.slice(0,31));
             window.location.href = 'main.html';
         }
         

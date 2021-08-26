@@ -1,36 +1,36 @@
-var userNumber = 1;
-var account = document.createElement("div");
-account.setAttribute("class", "simple-text");
-var accountString = document.createElement('p');
-accountString.innerHTML = "Account " + userNumber;
-account.appendChild(accountString); 
+var userDiv = document.createElement("div");
+userDiv.setAttribute("class", "simple-text");
+var userString = document.createElement('p');
+let user = getCurrentUser();
+userString.innerHTML = "User: " + user;
+userDiv.appendChild(userString); 
 
-var keyType = document.createElement("div");
-keyType.setAttribute("class", "simple-text");
-var keyTypeString = document.createElement('p');
-keyTypeString.innerHTML = "Transaction Key";
-keyType.appendChild(keyTypeString); 
-
-var publicKey = document.createElement("div");
-publicKey.setAttribute("class", "simple-text");
-var publicKeyString = document.createElement('p');
-publicKeyString.innerHTML =  window.localStorage.getItem("Users");
-publicKey.appendChild(publicKeyString); 
+var pubKeyString = document.createElement('p');
+let pubKey = getCurrentPubKey();
+pubKeyString.innerHTML = "Address: 0x"+ pubKey;
+userDiv.appendChild(pubKeyString); 
 
 var privateKey = document.createElement("button");
 privateKey.setAttribute("class", "generic-button");
 privateKey.textContent = "Check Private Key"
 privateKey.onclick = CheckUserPassword;
 
+var home = document.createElement("button");
+home.setAttribute("class", "generic-button");
+home.textContent = "Return Home"
+home.onclick = ReturnHomeScreen;
+
 let main = document.getElementById("main");
 
-main.appendChild(account); 
-main.appendChild(keyType); 
-main.appendChild(publicKey); 
-main.appendChild(privateKey); 
+main.appendChild(userDiv); 
+main.appendChild(privateKey);
+main.appendChild(home); 
 
 
 function CheckUserPassword() {
         window.location.href = 'check-password.html';
 }
 
+function ReturnHomeScreen() {
+        window.location.href = 'entrypoint.html';
+}

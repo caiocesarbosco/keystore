@@ -22,15 +22,15 @@ users.forEach(userKeyring => {
     main.appendChild(user);
 })
 
-var recover = document.createElement("button");
+/*var recover = document.createElement("button");
 recover.id = "recover-account-id";
 recover.setAttribute("class", "generic-button");
 recover.textContent = "Recover Account";
-main.appendChild(recover);
+main.appendChild(recover);*/
 
 document.getElementById("create-account-submit").onclick = redirectCreateAccount;
-document.getElementById("import-account-submit").onclick = redirectImportAccount;
-document.getElementById("import-file-submit").onclick = redirectImportFile;
+//document.getElementById("import-account-submit").onclick = redirectImportAccount;
+//document.getElementById("import-file-submit").onclick = redirectImportFile;
 
 function redirectCreateAccount() {
     window.location.href = 'create-wallet.html';

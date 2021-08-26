@@ -24,8 +24,12 @@ async function submitCreateWallet() {
         } else if (password != confirm) {
             message.innerHTML = "Confirmation does not match"
         } else {
-            await storingEncryptedUserKeyPairs(user, password);
-            window.location.href = 'secret-phrase.html';
+
+            var keyring = await createKeyRing();
+            await storingEncryptedUserKeyPairs(keyring, user, password);
+            setCurrentUser(user);
+            setCurrentPubKey(keyring.public);
+            window.location.href = 'main.html';
         }
     }    
 }

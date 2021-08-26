@@ -1,5 +1,6 @@
 function resetCurrentUser() {
     window.localStorage.removeItem("Session-User");
+    window.localStorage.removeItem("Session-PublicKey");
 }
 
 function setCurrentUser(user) {
@@ -9,6 +10,15 @@ function setCurrentUser(user) {
 function getCurrentUser() {
     let sessionUser = window.localStorage.getItem("Session-User");
     return sessionUser;
+}
+
+function setCurrentPubKey(pubKey) {
+    window.localStorage.setItem("Session-PublicKey", pubKey);
+} 
+
+function getCurrentPubKey() {
+    let sessionPubKey = window.localStorage.getItem("Session-PublicKey");
+    return sessionPubKey;
 } 
 
 function createKeyStoreFile(userKeyPair) {
@@ -42,6 +52,16 @@ function getUsers() {
     })
 
     return users;
+}
+
+async function createKeyRing() {
+    var keyPair = await generateKeyPair();
+    var keyPairObj = {
+        "public": keyPair.publicKey.toString().slice(2,32),
+        "private": keyPair.privateKey.toString().slice(2,32)
+    }
+    alert("Pub: " + keyPairObj.public + "Pri: " + keyPairObj.private);
+    return keyPairObj;
 }
 
 function getUserKeyRing(user) {
