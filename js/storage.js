@@ -1,3 +1,16 @@
+function resetCurrentUser() {
+    window.localStorage.removeItem("Session-User");
+}
+
+function setCurrentUser(user) {
+    window.localStorage.setItem("Session-User", user);
+} 
+
+function getCurrentUser(user) {
+    let sessionUser = window.localStorage.getItem("Session-User");
+    return sessionUser;
+} 
+
 function createKeyStoreFile(userKeyPair) {
 
     var userKeyStoreObj = {

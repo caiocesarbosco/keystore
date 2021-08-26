@@ -4,7 +4,7 @@ document.getElementById("user-auth-confirm-button").onclick = checkPassword;
 document.getElementById("user-auth-cancel-button").onclick = cancelCheckPassword;
 
 function cancelCheckPassword() {
-    window.location.href = 'create-wallet.html';
+    window.location.href = 'entrypoint.html';
 }
 
 async function checkPassword() {
