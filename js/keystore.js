@@ -75,6 +75,13 @@ async function encryptsKeyPairFile(data, key, password) {
     return cipher;
 }
 
+async function decryptsKeyPairFile(data, key) {
+   
+    var iv = asciiToUint8Array("AnyRandomData012");
+    var plainText = await crypto.subtle.encrypt({name: 'AES-CTR', counter: iv, length: 32}, key, data);
+    return plainText;
+}
+
 async function storingEncryptedUserKeyPairs(password) {
 
     var mockedContent = {
@@ -91,6 +98,15 @@ async function storingEncryptedUserKeyPairs(password) {
     }
     window.localStorage.setItem("keyStore", JSON.stringify(jsonEncriptedUserKeyPair));
 
+}
+
+async function decryptUserKeyPairs(password) {
+    var encriptedUserKeyPair = window.localStorage.getItem("keyStore");
+    var encriptedUserKeyPairObj = JSON.parse(encriptedUserKeyPair);
+    var derivedKeys = await deriveKey(password);
+    var plainObj = await decryptsKeyPairFile(hexStringToUint8Array(encriptedUserKeyPairObj.encrypted), derivedKeys.encrypt);
+    var plainText = bytesToASCIIString(plainObj);
+    return plainText;
 }
 
 async function checkEncryptedUserKeyPair(password) {

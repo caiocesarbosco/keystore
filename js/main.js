@@ -14,7 +14,7 @@ keyType.appendChild(keyTypeString);
 var publicKey = document.createElement("div");
 publicKey.setAttribute("class", "simple-text");
 var publicKeyString = document.createElement('p');
-publicKeyString.innerHTML = "0x0123456789";
+publicKeyString.innerHTML =  window.localStorage.getItem("Users");
 publicKey.appendChild(publicKeyString); 
 
 var privateKey = document.createElement("button");
