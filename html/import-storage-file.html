@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Keystore File</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+  <main id="main" class="main-holder">
+    <h1 class="login-header">Import Keystore File</h1>
+    
+    <div class="simple-text" id="feed-text">
+      <p></p>
+    </div>
+
+    <input type="file" id="inputfile" name="files[]" accept=".json"/>
+    <input type="button" value="Submit" id="import-keytore-submit" class="generic-button">
+    <input type="button" value="Cancel" id="import-keytore-cancel" class="generic-button">
+
+    <script type="text/javascript" src="../js/storage.js"></script>
+    <script type="text/javascript" src="../js/utils.js"></script>
+    <script type="text/javascript" src="../js/keystore.js"></script>
+    <script type="text/javascript" src="../js/import-storage-file.js"></script>
+  
+  </main>
+</body>
+
+</html>

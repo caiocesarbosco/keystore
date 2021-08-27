@@ -43,6 +43,20 @@ function getKeyStoreFile() {
 
 }
 
+function existKeyring(keyring) {
+
+    var exist = false;
+    var keyStore = getKeyStoreFile();
+    keyStore.users.forEach(elem => {
+        if(elem.user.toString() === keyring.user.toString() && elem.encrypted.toString() === keyring.encrypted.toString() && elem.signed.toString() === keyring.signed.toString()) {
+            exist=true;
+        } 
+    })
+    
+    return exist;
+
+}
+
 function getUsers() {
 
     var users = new Array();
@@ -89,4 +103,44 @@ function appendUserKeyStore(userkeyRing) {
     keyStore.users.push(userkeyRing);
     window.localStorage.setItem("keyStore", JSON.stringify(keyStore));
 
+}
+
+function isValidedImportKeyStore(file) {
+
+    try {
+        jsonObj = JSON.parse(file);
+    } catch (e) {
+        return false;
+    }
+    
+    var isValid = true;
+    if(jsonObj) {
+        if(jsonObj.users) {
+            jsonObj.users.forEach(user => {
+                if(user["user"] === undefined || user["encrypted"] === undefined || user["signed"] === undefined) {
+                    isValid = false;
+                } 
+            })
+        } else {
+            isValid = false;
+        }
+
+    } else {
+        isValid = false;      
+    }
+
+    return isValid;
+
+}
+
+function importKeyStore(file) {
+
+    jsonObj = JSON.parse(file);
+
+    jsonObj.users.forEach(elem => {
+        if(existKeyring(elem) === false) {
+            appendUserKeyStore(elem);
+        }
+    })
+ 
 }

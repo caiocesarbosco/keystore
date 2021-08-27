@@ -30,7 +30,7 @@ main.appendChild(recover);*/
 
 document.getElementById("create-account-submit").onclick = redirectCreateAccount;
 document.getElementById("import-account-submit").onclick = redirectImportAccount;
-//document.getElementById("import-file-submit").onclick = redirectImportFile;
+document.getElementById("import-file-submit").onclick = redirectImportFile;
 
 function redirectCreateAccount() {
     window.location.href = 'create-wallet.html';
@@ -41,6 +41,7 @@ function redirectImportAccount() {
 }
 
 function redirectImportFile() {
+    window.location.href = 'import-storage-file.html';
 }
 
 function redirectUserAuth(event) {
