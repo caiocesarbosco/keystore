@@ -29,7 +29,7 @@ recover.textContent = "Recover Account";
 main.appendChild(recover);*/
 
 document.getElementById("create-account-submit").onclick = redirectCreateAccount;
-//document.getElementById("import-account-submit").onclick = redirectImportAccount;
+document.getElementById("import-account-submit").onclick = redirectImportAccount;
 //document.getElementById("import-file-submit").onclick = redirectImportFile;
 
 function redirectCreateAccount() {
@@ -37,6 +37,7 @@ function redirectCreateAccount() {
 }
 
 function redirectImportAccount() {
+    window.location.href = 'import-account.html';
 }
 
 function redirectImportFile() {

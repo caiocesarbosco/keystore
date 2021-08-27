@@ -54,13 +54,20 @@ function getUsers() {
     return users;
 }
 
+function importKeypair(public, private) {
+    var keyPairObj = {
+        "public": public,
+        "private": private
+    }
+    return keyPairObj;
+}
+
 async function createKeyRing() {
     var keyPair = await generateKeyPair();
     var keyPairObj = {
         "public": keyPair.publicKey.toString().slice(2,32),
         "private": keyPair.privateKey.toString().slice(2,32)
     }
-    alert("Pub: " + keyPairObj.public + "Pri: " + keyPairObj.private);
     return keyPairObj;
 }
 

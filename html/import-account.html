@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import a Account</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+  <main class="main-holder">
+    <h1 class="login-header">Import a Account</h1>
+
+    <div class="generic-form">
+      <div class="simple-text">
+        <p>Username</p>
+      </div>
+      <input type="text" id="create-user">
+      <div class="simple-text">
+        <p>Public Key</p>
+      </div>
+      <input type="text" id="create-public-key">
+      <div class="simple-text">
+        <p>Private Key</p>
+      </div>
+      <input type="text" id="create-private-key">
+    </div>
+
+    <div class="generic-form">
+      <div class="simple-text">
+        <p>Create a Password</p>
+      </div>
+      <input type="password" id="create-password">
+    </div>
+    
+    <div class="generic-form">
+        <div class="simple-text">
+          <p>Confirm the Password</p>
+        </div>
+        <input type="password" id="confirm-password">
+    </div>
+
+    <div class="generic-form">
+      <div class="simple-text" id="import-account-feedback-text">
+      </div>
+    </div>
+
+    <div class="generic-form">
+      <input type="button" value="Submit" id="import-account-submit-button" class="generic-button">
+      <input type="button" value="Cancel" id="import-account-cancel-button" class="generic-button">
+    </div>
+
+    <script defer src="../js/storage.js"></script>
+    <script defer src="../js/utils.js"></script>
+    <script defer src="../js/keystore.js"></script>
+    <script defer src="../js/import-account.js"></script>
+
+  </main>
+</body>
+
+</html>
