@@ -1,4 +1,9 @@
-const encryptor = require('encrypt');
+const implementjs = require('implement-js');
+const implement = implementjs.default;
+const { Interface, type } = implementjs;
+const encryptor = require('symmetricEncryption');
+
+
 /**
  * Enum for Keyring Types:
  * 
@@ -14,15 +19,59 @@ const KeyringType = {
 Object.freeze(KeyringType);
 
 /**
+ * Interface definition for Encryptor Module used to encrypt/decrypt
+ * Keyring saved on Local Store.
+ * @interface SymmetricEncryptor
+ */
+const SymmetricEncryptorInterface = Interface('SymmetricEncryptorInterface')({
+        encrypt: type('function'),
+        decrypt: type('function')
+    },{
+        error: true,
+        strict: false
+    }
+)
+
+/**
+ * A Persitent Local Store Class to save Encrypted Keyrings
+ * @class LocalStore
+ */
+class LocalStore {
+    constructor() {
+        this.vault = {};
+        this.signature = null;
+    }
+
+    getVault() {
+        return this.vault;
+    }
+
+}
+
+
+
+/**
  * A Keyring class to handle Keyring's Operations just inside RAM Memory
  * @class RamStore
  */
 
 class RamStore {
     constructor(params) {
+        this.#isLocked = true;
+        this.keyrings = [];
+    }
+
+    setLocked() {
         this.isLocked = true;
         this.keyrings = [];
     }
+
+    setUnlocked() {
+        this.isLocked = false;
+
+    }
+
+
 }
 
 /**
@@ -47,16 +96,7 @@ class KeyringController {
         /** Used to temporary holds User's Extension Password */
         this.password = null;
         /** Encryption Module for: Derive, Encrypt & Decrypt with AES Algorithm using User's Password*/
-        this.encryptor = encryptor; 
-    }
-
-    /**
-     *      emit a update signal for all listeners;
-     *      update any interval state;
-     *      @emit update event
-     */
-    fullUpdate() {
-
+        this.encryptor = implement(SymmetricEncryptorInterface)(encryptor);
     }
 
     /**
@@ -67,7 +107,8 @@ class KeyringController {
      * @emits lock event
      */
     setLocked() {
-
+        this.password = null;
+        this.ramStore.setLocked();
     }
 
     /**
@@ -76,8 +117,10 @@ class KeyringController {
      *      update any internal state;
      *      restore on RamStore the Persisted User Keyrings;
      * @emits unlock event
+     * @param {string} password
      */
-    setUnlocked() {
+    setUnlocked(password) {
+        this.ramStore.setUnlocked();
 
     }
 
