@@ -1,7 +1,6 @@
+const encryptor = require('./symmetricEncryption.js');
 const implementjs = require('implement-js');
 const implement = implementjs.default;
-const { Interface, type } = implementjs;
-const encryptor = require('symmetricEncryption');
 
 
 /**
@@ -17,20 +16,6 @@ const KeyringType = {
 };
 
 Object.freeze(KeyringType);
-
-/**
- * Interface definition for Encryptor Module used to encrypt/decrypt
- * Keyring saved on Local Store.
- * @interface SymmetricEncryptor
- */
-const SymmetricEncryptorInterface = Interface('SymmetricEncryptorInterface')({
-        encrypt: type('function'),
-        decrypt: type('function')
-    },{
-        error: true,
-        strict: false
-    }
-)
 
 /**
  * A Persitent Local Store Class to save Encrypted Keyrings
@@ -56,7 +41,10 @@ class LocalStore {
  */
 
 class RamStore {
-    constructor(params) {
+
+    #isLocked;
+
+    constructor() {
         this.#isLocked = true;
         this.keyrings = [];
     }
@@ -92,11 +80,11 @@ class KeyringController {
         /** Store Class which will persist Keyrings on Local Storage*/
         this.store = {};
         /** Ram Store Class which will temporary holds keyrings on an Local Array of Keyrings*/
-        this.ramStore = new RamStore(params);
+        this.ramStore = new RamStore();
         /** Used to temporary holds User's Extension Password */
         this.password = null;
         /** Encryption Module for: Derive, Encrypt & Decrypt with AES Algorithm using User's Password*/
-        this.encryptor = implement(SymmetricEncryptorInterface)(encryptor);
+        this.encryptor = implement(encryptor.SymmetricEncryptorInterface)(new encryptor.SymmetricEncryptor());
     }
 
     /**
@@ -263,7 +251,10 @@ class KeyringController {
     }
 
 
-
-
 }
+
+module.exports = {
+    KeyringController: KeyringController,
+    KeyringType: KeyringType
+};
 
