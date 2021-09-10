@@ -1,6 +1,8 @@
 const encryptor = require('./symmetricEncryption.js');
 const implementjs = require('implement-js');
 const implement = implementjs.default;
+const simpleKeyring = require('./SimpleKeyring.js');
+const hdKeyring = require('./HdKeyring.js');
 
 
 /**
@@ -136,6 +138,8 @@ class KeyringController {
      */
     addNewKeyring(keyring) {
 
+        if(this.checkForDuplicates())
+
     }
 
     /**
@@ -200,10 +204,24 @@ class KeyringController {
     }
 
     /**
-     * Get Keyring by Type
+     * Get Keyring Class Conby Type
      * @param {KeyringType} type Keyring Type
      */
     getKeyringByType(type) {
+        const keyring; 
+        switch(type) {
+            case KeyringType.SIMPLE_KEYRING:
+                keyring = simpleKeyring;
+                break;
+            case KeyringType.HD_KEYRING:
+                keyring = hdKeyring;
+                break;
+            default:
+                keyring = simpleKeyring;
+                break;
+        }
+
+        return keyring;
 
     }
 
