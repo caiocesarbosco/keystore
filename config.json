@@ -1,0 +1,10 @@
+{
+    "encryptor": {
+        "encrypt_algoritm": "AES-CTR",
+        "sign_algorithm": "HMAC",
+        "derive_key_algorithm": "PBKDF2",
+        "hash_algorithm": "SHA-256",
+        "derived_key_size": 128,
+        "iterations": 262144
+    }
+}
