@@ -36,8 +36,17 @@ class LocalStore {
         return this.#vault;
     }
 
+    isEmpty() {
+        return !this.#vault.length;
+    }
+
     async encrypt(data, password) {
         this.#vault = await this.encryptor["encrypt"](JSON.stringify(data), password);
+    }
+
+    async decrypt(encryptedData, password) {
+        let data = JSON.parse(this.encryptor["decrypt"](encryptedData, password));
+        return data;
     }
 }
 
@@ -50,20 +59,27 @@ class LocalStore {
 
 class RamStore {
 
+    #password;
     #isLocked;
     #keyrings;
 
     constructor() {
         this.#isLocked = true;
         this.#keyrings = [];
+        this.#password = null;
     }
 
     setLocked() {
         this.#isLocked = true;
         this.#keyrings = [];
+        this.#password = null;
     }
 
-    setUnlocked() {
+    setUnlocked(keyrings, password) {
+        keyrings.forEach(keyring => {
+            this.#keyrings.push(keyring);
+        });
+        this.#password = password;
         this.#isLocked = false;
 
     }
@@ -78,6 +94,14 @@ class RamStore {
 
     getKeyrings() {
         return this.#keyrings;
+    }
+
+    isEmpty() {
+        return !this.#keyrings.length;
+    }
+
+    getPassword() {
+        return this.#password;
     }
 
 }
@@ -103,8 +127,6 @@ class KeyringController {
         this.store = new LocalStore(this.encryptor);
         /** Ram Store Class which will temporary holds keyrings on an Local Array of Keyrings*/
         this.ramStore = new RamStore();
-        /** Used to temporary holds User's Extension Password */
-        this.password = null;
     }
 
     /**
@@ -114,8 +136,8 @@ class KeyringController {
      *      update any internal state;
      * @emits lock event
      */
-    setLocked() {
-        this.password = null;
+    async setLocked() {
+        await this.store.encrypt(JSON.stringify(this.ramStore.getKeyrings()), this.ramStore.getPassword());
         this.ramStore.setLocked();
     }
 
@@ -125,9 +147,13 @@ class KeyringController {
      *      update any internal state;
      *      restore on RamStore the Persisted User Keyrings;
      * @emits unlock event
+     * @param password
      */
-    setUnlocked() {
-        this.ramStore.setUnlocked();
+    async setUnlocked(password) {
+
+
+        let keyrings = this.store.isEmpty() ? [] : await this.store.decrypt(this.getVault(), password);
+        this.ramStore.setUnlocked(keyrings, password);
 
     }
 
@@ -146,8 +172,7 @@ class KeyringController {
      *      verify User's password checking signature of encrypted data on Local Store;
      *      @param {string} password User's Password
      */
-     verifyPassword(password) {
-
+    verifyPassword(password) {
     }
 
     /**

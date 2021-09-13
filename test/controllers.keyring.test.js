@@ -41,7 +41,8 @@ test("Test default locking Keyring Controller", () => {
     };
     let keyringController = new KeyringController.KeyringController(params);
     expect(keyringController.ramStore.isRamStoreLocked()).toBe(true);
-    expect(keyringController.password).toBe(null);
+    expect(keyringController.ramStore.getPassword()).toBe(null);
+    expect(keyringController.ramStore.getKeyrings().length).toBe(0);
 })
 
 test("Test locking Keyring Controller", () => {
@@ -51,7 +52,8 @@ test("Test locking Keyring Controller", () => {
     let keyringController = new KeyringController.KeyringController(params);
     keyringController.setLocked();
     expect(keyringController.ramStore.isRamStoreLocked()).toBe(true);
-    expect(keyringController.password).toBe(null);
+    expect(keyringController.ramStore.getPassword()).toBe(null);
+    expect(keyringController.ramStore.getKeyrings().length).toBe(0);
 });
 
 test("Test unlocking Keyring Controller", () => {
@@ -59,8 +61,9 @@ test("Test unlocking Keyring Controller", () => {
         type: KeyringController.KeyringType.SIMPLE_KEYRING
     };
     let keyringController = new KeyringController.KeyringController(params);
-    keyringController.setUnlocked();
+    keyringController.setUnlocked("1234");
     expect(keyringController.ramStore.isRamStoreLocked()).toBe(false);
+    expect(keyringController.ramStore.getPassword()).toBe("1234");
 });
 
 test("Test Keyring's Encryption", async () => {
@@ -72,5 +75,6 @@ test("Test Keyring's Encryption", async () => {
     keyringController.addNewKeyring(keyring);
     await keyringController.submitPassword("1234");
     expect(keyringController.store.getVault()).not.toBe("{}");
-    console.log(keyringController.store.getVault());
-})
+});
+
+

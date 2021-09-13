@@ -44,7 +44,7 @@ class SymmetricEncryptor {
      * @param {string} password Username's Password 
      * @param {string} data serialized Encrypted Keyring Data
      */
-    decrypt(password, data) {
+    decrypt(data, password) {
         return this.decrypt(data, password);
     }
 
