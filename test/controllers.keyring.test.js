@@ -32,7 +32,7 @@ test("Test add Keyring", () => {
     let keyringController = new KeyringController.KeyringController(params);
     let keyring = keyringController.getKeyringByType(keyringController.type);
     keyringController.addNewKeyring(keyring);
-    expect(keyringController.ramStore.keyrings.length).not.toBe(0);
+    expect(keyringController.ramStore.getKeyrings().length).not.toBe(0);
 });
 
 test("Test default locking Keyring Controller", () => {
@@ -62,3 +62,15 @@ test("Test unlocking Keyring Controller", () => {
     keyringController.setUnlocked();
     expect(keyringController.ramStore.isRamStoreLocked()).toBe(false);
 });
+
+test("Test Keyring's Encryption", async () => {
+    let params = {
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController(params);
+    let keyring = keyringController.getKeyringByType(keyringController.type);
+    keyringController.addNewKeyring(keyring);
+    await keyringController.submitPassword("1234");
+    expect(keyringController.store.getVault()).not.toBe("{}");
+    console.log(keyringController.store.getVault());
+})

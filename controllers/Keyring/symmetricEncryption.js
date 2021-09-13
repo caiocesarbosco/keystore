@@ -25,15 +25,11 @@ const { Interface, type } = implementjs;
 class SymmetricEncryptor {
     
     constructor() {
-
-        return {
-            encrypt: this.encrypt,
-            decrypt: this.decrypt,
-            deriveKey: this.deriveKey,
-            sign: this.sign,
-            verify: this.verify
-        }
-
+        this.encrypt = encryptor.encryptsKeyPairFile;
+        this.decrypt = encryptor.decryptsKeyPairFile;
+        this.deriveKey = encryptor.deriveKey;
+        this.sign = encryptor.signKeyPairFile;
+        this.verify = encryptor.verifyHmac;
     }
 
     /**
@@ -41,7 +37,7 @@ class SymmetricEncryptor {
      * @param {string} data serialized Raw Keyring Data
      */
     encrypt(password, data) {
-        return encryptor.encrypt(data, password);
+        return this.encrypt(data, password);
     }
 
     /**
@@ -49,14 +45,14 @@ class SymmetricEncryptor {
      * @param {string} data serialized Encrypted Keyring Data
      */
     decrypt(password, data) {
-        return encryptor.decrypt(data, password);
+        return this.decrypt(data, password);
     }
 
     /**
      * @param {string} password Username's Password 
      */
     deriveKey(password) {
-        return encryptor.deriveKey(password);
+        return this.deriveKey(password);
     }
 
     /**
@@ -64,7 +60,7 @@ class SymmetricEncryptor {
      * @param derivedKey
      */
      sign(data, derivedKey) {
-        return encryptor.signKeyPairFile(data, derivedKey);
+        return this.sign(data, derivedKey);
      }
 
      /**
@@ -73,7 +69,7 @@ class SymmetricEncryptor {
       * @param data
       */
      verify(derivedKey, signedData, data) {
-        return encryptor.verifyHmac(derivedKey, signedData, data);
+        return this.verify(derivedKey, signedData, data);
      }
 }
 

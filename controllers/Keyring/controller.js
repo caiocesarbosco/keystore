@@ -24,15 +24,21 @@ Object.freeze(KeyringType);
  * @class LocalStore
  */
 class LocalStore {
-    constructor() {
-        this.vault = {};
+    #vault;
+
+    constructor(encryptor) {
+        this.#vault = {};
         this.signature = null;
+        this.encryptor = encryptor;
     }
 
     getVault() {
-        return this.vault;
+        return this.#vault;
     }
 
+    async encrypt(data, password) {
+        this.#vault = await this.encryptor["encrypt"](JSON.stringify(data), password);
+    }
 }
 
 
@@ -45,15 +51,16 @@ class LocalStore {
 class RamStore {
 
     #isLocked;
+    #keyrings;
 
     constructor() {
         this.#isLocked = true;
-        this.keyrings = [];
+        this.#keyrings = [];
     }
 
     setLocked() {
         this.#isLocked = true;
-        this.keyrings = [];
+        this.#keyrings = [];
     }
 
     setUnlocked() {
@@ -66,7 +73,11 @@ class RamStore {
     }
 
     addKeyring(keyring) {
-        this.keyrings.push(keyring);
+        this.#keyrings.push(keyring);
+    }
+
+    getKeyrings() {
+        return this.#keyrings;
     }
 
 }
@@ -86,14 +97,14 @@ class KeyringController {
         this.type = params.type;
         /** State Object would be extended from a Emitter or Observable Class in Future*/
         this.state = {};
+        /** Encryption Module for: Derive, Encrypt & Decrypt with AES Algorithm using User's Password*/
+        this.encryptor = implement(encryptor.SymmetricEncryptorInterface)(new encryptor.SymmetricEncryptor());
         /** Store Class which will persist Keyrings on Local Storage*/
-        this.store = {};
+        this.store = new LocalStore(this.encryptor);
         /** Ram Store Class which will temporary holds keyrings on an Local Array of Keyrings*/
         this.ramStore = new RamStore();
         /** Used to temporary holds User's Extension Password */
         this.password = null;
-        /** Encryption Module for: Derive, Encrypt & Decrypt with AES Algorithm using User's Password*/
-        this.encryptor = implement(encryptor.SymmetricEncryptorInterface)(new encryptor.SymmetricEncryptor());
     }
 
     /**
@@ -125,8 +136,9 @@ class KeyringController {
      *      submit User's password to encrypt all Keyring Array as a Vault into Local Store;
      *      @param {string} password User's Password
      */
-    submitPassword(password) {
-
+    async submitPassword(password) {
+        let keyrings = this.ramStore.getKeyrings();
+        await this.store.encrypt(keyrings, password);
     }
 
     /**
