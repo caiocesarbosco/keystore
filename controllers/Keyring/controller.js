@@ -52,15 +52,22 @@ class RamStore {
     }
 
     setLocked() {
-        this.isLocked = true;
+        this.#isLocked = true;
         this.keyrings = [];
     }
 
     setUnlocked() {
-        this.isLocked = false;
+        this.#isLocked = false;
 
     }
 
+    isRamStoreLocked() {
+        return this.#isLocked;
+    }
+
+    addKeyring(keyring) {
+        this.keyrings.push(keyring);
+    }
 
 }
 
@@ -107,9 +114,8 @@ class KeyringController {
      *      update any internal state;
      *      restore on RamStore the Persisted User Keyrings;
      * @emits unlock event
-     * @param {string} password
      */
-    setUnlocked(password) {
+    setUnlocked() {
         this.ramStore.setUnlocked();
 
     }
@@ -138,7 +144,8 @@ class KeyringController {
      */
     addNewKeyring(keyring) {
 
-        if(this.checkForDuplicates())
+        this.ramStore.addKeyring(keyring);
+        //if(this.checkForDuplicates())
 
     }
 
@@ -204,20 +211,20 @@ class KeyringController {
     }
 
     /**
-     * Get Keyring Class Conby Type
+     * Get Keyring Class by Type
      * @param {KeyringType} type Keyring Type
      */
     getKeyringByType(type) {
-        const keyring; 
+        let keyring;
         switch(type) {
             case KeyringType.SIMPLE_KEYRING:
-                keyring = simpleKeyring;
+                keyring = new simpleKeyring.SimpleKeyring();
                 break;
             case KeyringType.HD_KEYRING:
-                keyring = hdKeyring;
+                keyring = new hdKeyring.HdKeyring();
                 break;
             default:
-                keyring = simpleKeyring;
+                keyring = new simpleKeyring.SimpleKeyring();
                 break;
         }
 

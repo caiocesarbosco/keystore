@@ -1,16 +1,16 @@
-const SimpleKeyring = require('SimpleKeyring');
+const simpleKeyring = require('./SimpleKeyring.js');
 
 /**
  * HD Keyring
  * @class HdKeyring 
  */
-class HdKeyring extends SimpleKeyring {
+class HdKeyring extends simpleKeyring.SimpleKeyring {
 
     /**
      * Constructor
      * @constructor
      */
-    constructor(config) {
+    constructor() {
         this.seed = null;
         this.mnemonic = null;
         this.rootKey = null;
@@ -54,3 +54,7 @@ class HdKeyring extends SimpleKeyring {
     }
 
 }
+
+module.exports = {
+    HdKeyring: HdKeyring
+};

@@ -7,9 +7,8 @@ class SimpleKeyring {
     /**
      * Constructor
      * @constructor
-     * @param {Obj} params Config
      */
-    constructor(params) {
+    constructor() {
         this.wallet = [];
     }
 
@@ -91,3 +90,8 @@ class SimpleKeyring {
  
 
 }
+
+
+module.exports = {
+    SimpleKeyring:SimpleKeyring
+};
