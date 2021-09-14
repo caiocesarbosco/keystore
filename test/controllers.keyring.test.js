@@ -169,3 +169,18 @@ test("Testing if duplicated keyring is not inserted on Keyring Array", () => {
     expect(keyringController.ramStore.getKeyrings().length).toBe(1);
 
 });*/
+
+test("Clear Keyrings Test", async () => {
+    let params = {
+        account: "MyAccountUsername",
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController();
+    keyringController.addNewAccount(params.account, params.type);
+    await keyringController.submitPassword("1234");
+    expect(keyringController.store.getVault().length).not.toBe(0);
+    expect(keyringController.ramStore.getKeyrings().length).not.toBe(0);
+    keyringController.clearKeyrings();
+    expect(keyringController.store.getVault().length).toBe(0);
+    expect(keyringController.ramStore.getKeyrings().length).toBe(0);
+});

@@ -46,6 +46,10 @@ class LocalStore {
         return this.#vault.length === 0;
     }
 
+    cleanVault() {
+        this.#vault = [];
+    }
+
     async encrypt(data, password) {
         this.#vault = await this.encryptor["encrypt"](data, password);
     }
@@ -107,6 +111,10 @@ class RamStore {
 
     getKeyrings() {
         return this.#keyrings;
+    }
+
+    clearKeyrings() {
+        this.#keyrings = [];
     }
 
     isEmpty() {
@@ -204,13 +212,6 @@ class KeyringController {
         if(this.checkForDuplicates(keyring) == false) {
             this.ramStore.addKeyring(keyring);
         }
-
-    }
-
-    /**
-     *      Remove Empty Keyrings
-     */
-    removeEmptyKeyring() {
 
     }
 
@@ -314,7 +315,8 @@ class KeyringController {
      * Clear All Keyrings
      */
     clearKeyrings() {
-
+        this.store.cleanVault();
+        this.ramStore.clearKeyrings();
     }
 
     /**
