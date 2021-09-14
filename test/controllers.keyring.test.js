@@ -206,3 +206,20 @@ test("Testing Get Accounts", () => {
     keyringController.addNewAccount(params.account2, params.type);
     expect(keyringController.getAccounts()).toStrictEqual([params.account1, params.account2]);
 });
+
+test("Testing remove Account", async () => {
+    let params = {
+        account1: "MyAccountUsername1",
+        account2: "MyAccountUsername2",
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController();
+    keyringController.addNewAccount(params.account1, params.type);
+    keyringController.addNewAccount(params.account2, params.type);
+    await keyringController.submitPassword("1234");
+    await keyringController.verifyPassword("1234");
+    await keyringController.removeAccount(params.account1);
+    keyringController.ramStore.clearKeyrings();
+    await keyringController.setUnlocked("1234");
+    expect(keyringController.getAccounts()).toStrictEqual([params.account2]);
+});

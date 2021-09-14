@@ -109,6 +109,10 @@ class RamStore {
         this.#keyrings.push(keyring);
     }
 
+    removeKeyring(account) {
+        this.#keyrings = this.#keyrings.filter(elem => elem["account"] != account);
+    }
+
     getKeyrings() {
         return this.#keyrings;
     }
@@ -175,9 +179,9 @@ class KeyringController {
         }
 
         let rightPassword = await this.store.verifyVaultSignature(password);
-
         if (rightPassword === true ) {
             let keyrings = JSON.parse(await this.store.decrypt(this.store.getVault(), password));
+            this.ramStore.clearKeyrings();
             this.ramStore.setUnlocked(keyrings, password);
         }
 
@@ -192,6 +196,7 @@ class KeyringController {
         let keyrings = this.ramStore.getKeyrings();
         await this.store.encrypt(JSON.stringify(keyrings), password);
         await this.store.signVault(password);
+        this.ramStore.setPassword(password);
     }
 
     /**
@@ -249,8 +254,9 @@ class KeyringController {
      * Remove Account
      * @param {string} account A Username Account
      */
-    removeAccount(account) {
-
+    async removeAccount(account) {
+        this.ramStore.removeKeyring(account);
+        await this.persistsAllKeyrings();
     }
 
     /**
@@ -304,6 +310,15 @@ class KeyringController {
      */
     getKeyringByAccount(account) {
         return this.ramStore.getKeyrings().filter(elem => elem["account"] === account);
+    }
+
+    /**
+     * Persist Keyrings
+     */
+    async persistsAllKeyrings() {
+        let keyrings = this.ramStore.getKeyrings();
+        await this.store.encrypt(JSON.stringify(keyrings), this.ramStore.getPassword());
+        await this.store.signVault(this.ramStore.getPassword());
     }
 
     /**
