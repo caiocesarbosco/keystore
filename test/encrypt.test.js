@@ -1,11 +1,17 @@
 const encryptor = require("../lib/encrypt/encrypt.js");
 
-test("Testing Sign", async () => {
+test("Testing Sign with Right Password", async () => {
     const data = "My Test Signed Data";
-    const derivedKey = await encryptor.deriveKey("1234");
-    const signedData = await encryptor.signKeyPairFile(data, derivedKey.sign);
-    const isValidSignature = await encryptor.verifyHmac(derivedKey.sign, signedData, data);
+    const signedData = await encryptor.signKeyPairFile(data, "1234");
+    const isValidSignature = await encryptor.verifyHmac("1234", signedData, data);
     expect(isValidSignature).toBe(true);
+});
+
+test("Testing Sign with Wrong Password", async () => {
+    const data = "My Test Signed Data";
+    const signedData = await encryptor.signKeyPairFile(data, "1234");
+    const isValidSignature = await encryptor.verifyHmac("4321", signedData, data);
+    expect(isValidSignature).toBe(false);
 });
 
 test("Testing Encryption", async () => {

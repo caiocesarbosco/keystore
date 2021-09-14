@@ -68,6 +68,39 @@ test("Test unlocking Keyring Controller", async () => {
     expect(keyringController.ramStore.getPassword()).toBe("1234");
 });
 
+test("Test Keyring's Encryption", async () => {
+    let params = {
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController(params);
+    let keyring = keyringController.getKeyringByType(keyringController.type);
+    keyringController.addNewKeyring(keyring);
+    await keyringController.submitPassword("1234");
+    expect(keyringController.store.isEmpty()).toBe(false);
+});
+
+test("Test Vault Signature Verify with right password", async () => {
+    let params = {
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController(params);
+    let keyring = keyringController.getKeyringByType(keyringController.type);
+    keyringController.addNewKeyring(keyring);
+    await keyringController.submitPassword("1234");
+    expect(await keyringController.verifyPassword("1234")).toBe(true);
+});
+
+test("Test Vault Signature Verify with wrong password", async () => {
+    let params = {
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController(params);
+    let keyring = keyringController.getKeyringByType(keyringController.type);
+    keyringController.addNewKeyring(keyring);
+    await keyringController.submitPassword("1234");
+    expect(await keyringController.verifyPassword("4321")).toBe(false);
+});
+
 test("Testing Lock followed by Unlock using right password", async () => {
     let params = {
         type: KeyringController.KeyringType.SIMPLE_KEYRING
@@ -87,15 +120,22 @@ test("Testing Lock followed by Unlock using right password", async () => {
 
 });
 
-test("Test Keyring's Encryption", async () => {
+test("Testing Lock followed by Unlock using wrong password", async () => {
     let params = {
         type: KeyringController.KeyringType.SIMPLE_KEYRING
     };
     let keyringController = new KeyringController.KeyringController(params);
     let keyring = keyringController.getKeyringByType(keyringController.type);
     keyringController.addNewKeyring(keyring);
-    await keyringController.submitPassword("1234");
+    keyringController.ramStore.setPassword("1234");
+    await keyringController.setLocked();
+    await keyringController.setUnlocked("4321");
+    let keyrings = keyringController.ramStore.keyrings;
+    expect(keyringController.ramStore.isRamStoreLocked()).toBe(true);
+    expect(keyringController.ramStore.getPassword()).toBe(null);
+    let refreshedKeyrings = keyringController.ramStore.getKeyrings();
+    expect(refreshedKeyrings).toEqual([]);
     expect(keyringController.store.isEmpty()).toBe(false);
+    expect(keyringController.ramStore.isEmpty()).toBe(true);
+
 });
-
-

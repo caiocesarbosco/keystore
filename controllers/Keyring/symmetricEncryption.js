@@ -57,19 +57,19 @@ class SymmetricEncryptor {
 
     /**
      * @param data
-     * @param derivedKey
+     * @param password
      */
-     sign(data, derivedKey) {
-        return this.sign(data, derivedKey);
+     sign(data, password) {
+        return this.sign(data, password);
      }
 
      /**
-      * @param derivedKey
+      * @param password
       * @param signedData
       * @param data
       */
-     verify(derivedKey, signedData, data) {
-        return this.verify(derivedKey, signedData, data);
+     verify(password, signedData, data) {
+        return this.verify(password, signedData, data);
      }
 }
 

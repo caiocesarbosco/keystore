@@ -26,6 +26,7 @@ Object.freeze(KeyringType);
  */
 class LocalStore {
     #vault;
+    #signature;
 
     constructor(encryptor) {
         this.#vault = [];
@@ -35,6 +36,10 @@ class LocalStore {
 
     getVault() {
         return this.#vault;
+    }
+
+    getSignature() {
+        return this.#signature;
     }
 
     isEmpty() {
@@ -48,6 +53,14 @@ class LocalStore {
     async decrypt(encryptedData, password) {
         let decryptedData = await this.encryptor["decrypt"](encryptedData, password);
         return decryptedData;
+    }
+
+    async signVault(password) {
+        this.#signature = await this.encryptor["sign"](utils.bytesToASCIIString(this.getVault()), password);
+    }
+
+    async verifyVaultSignature(password) {
+        return await this.encryptor["verify"](password, this.getSignature(), utils.bytesToASCIIString(this.getVault()));
     }
 }
 
@@ -142,6 +155,7 @@ class KeyringController {
      */
     async setLocked() {
         await this.store.encrypt(JSON.stringify(this.ramStore.getKeyrings()), this.ramStore.getPassword());
+        await this.store.signVault(this.ramStore.getPassword());
         this.ramStore.setLocked();
     }
 
@@ -155,8 +169,17 @@ class KeyringController {
      */
     async setUnlocked(password) {
 
-        let keyrings = this.store.isEmpty() ? [] : JSON.parse(await this.store.decrypt(this.store.getVault(), password));
-        this.ramStore.setUnlocked(keyrings, password);
+        if (this.store.isEmpty()) {
+            this.ramStore.setUnlocked([], password);
+            return;
+        }
+
+        let rightPassword = await this.store.verifyVaultSignature(password);
+
+        if (rightPassword === true ) {
+            let keyrings = JSON.parse(await this.store.decrypt(this.store.getVault(), password));
+            this.ramStore.setUnlocked(keyrings, password);
+        }
 
     }
 
@@ -168,6 +191,7 @@ class KeyringController {
     async submitPassword(password) {
         let keyrings = this.ramStore.getKeyrings();
         await this.store.encrypt(JSON.stringify(keyrings), password);
+        await this.store.signVault(password);
     }
 
     /**
@@ -175,7 +199,8 @@ class KeyringController {
      *      verify User's password checking signature of encrypted data on Local Store;
      *      @param {string} password User's Password
      */
-    verifyPassword(password) {
+    async verifyPassword(password) {
+        return await this.store.verifyVaultSignature(password);
     }
 
     /**
