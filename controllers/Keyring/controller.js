@@ -241,6 +241,8 @@ class KeyringController {
      */
     exportAccount(account) {
 
+        return this.getKeyringByAccount(account);
+
     }
 
     /**
@@ -293,7 +295,7 @@ class KeyringController {
      * get Accounts
      */
     getAccounts() {
-
+        return this.ramStore.getKeyrings().map(elem => elem["account"]);
     }
 
     /**

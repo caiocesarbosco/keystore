@@ -194,3 +194,15 @@ test("Testing get Keyring by account", () => {
     keyringController.addNewAccount(params.account, params.type);
     expect(keyringController.getKeyringByAccount(params.account)[0]["account"]).toBe(params.account);
 });
+
+test("Testing Get Accounts", () => {
+    let params = {
+        account1: "MyAccountUsername1",
+        account2: "MyAccountUsername2",
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController();
+    keyringController.addNewAccount(params.account1, params.type);
+    keyringController.addNewAccount(params.account2, params.type);
+    expect(keyringController.getAccounts()).toStrictEqual([params.account1, params.account2]);
+});
