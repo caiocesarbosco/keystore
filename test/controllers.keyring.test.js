@@ -184,3 +184,13 @@ test("Clear Keyrings Test", async () => {
     expect(keyringController.store.getVault().length).toBe(0);
     expect(keyringController.ramStore.getKeyrings().length).toBe(0);
 });
+
+test("Testing get Keyring by account", () => {
+    let params = {
+        account: "MyAccountUsername",
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController();
+    keyringController.addNewAccount(params.account, params.type);
+    expect(keyringController.getKeyringByAccount(params.account)[0]["account"]).toBe(params.account);
+});

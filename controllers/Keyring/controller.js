@@ -268,13 +268,6 @@ class KeyringController {
     }
 
     /**
-     * Persist All Keyrings
-     */
-    persistAllKeyrings() {
-
-    }
-
-    /**
      * Get Keyring Class by Type
      * @param {KeyringType} type Keyring Type
      */
@@ -308,7 +301,7 @@ class KeyringController {
      * @param {string} account A Username Account
      */
     getKeyringByAccount(account) {
-
+        return this.ramStore.getKeyrings().filter(elem => elem["account"] === account);
     }
 
     /**
