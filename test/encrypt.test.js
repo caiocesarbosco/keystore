@@ -8,3 +8,10 @@ test("Testing Sign", async () => {
     expect(isValidSignature).toBe(true);
 });
 
+test("Testing Encryption", async () => {
+    const data = "My Test Signed Data";
+    let encryptedData = await encryptor.encryptsKeyPairFile(data, "1234");
+    let decryptedData = await encryptor.decryptsKeyPairFile(encryptedData, "1234");
+    expect(decryptedData).toBe(data);
+});
+

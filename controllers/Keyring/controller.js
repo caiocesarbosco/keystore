@@ -3,6 +3,7 @@ const implementjs = require('implement-js');
 const implement = implementjs.default;
 const simpleKeyring = require('./SimpleKeyring.js');
 const hdKeyring = require('./HdKeyring.js');
+const utils = require('../../lib/utils/utils.js');
 
 
 /**
@@ -27,7 +28,7 @@ class LocalStore {
     #vault;
 
     constructor(encryptor) {
-        this.#vault = {};
+        this.#vault = [];
         this.signature = null;
         this.encryptor = encryptor;
     }
@@ -37,16 +38,16 @@ class LocalStore {
     }
 
     isEmpty() {
-        return !this.#vault.length;
+        return this.#vault.length === 0;
     }
 
     async encrypt(data, password) {
-        this.#vault = await this.encryptor["encrypt"](JSON.stringify(data), password);
+        this.#vault = await this.encryptor["encrypt"](data, password);
     }
 
     async decrypt(encryptedData, password) {
-        let data = JSON.parse(this.encryptor["decrypt"](encryptedData, password));
-        return data;
+        let decryptedData = await this.encryptor["decrypt"](encryptedData, password);
+        return decryptedData;
     }
 }
 
@@ -81,7 +82,6 @@ class RamStore {
         });
         this.#password = password;
         this.#isLocked = false;
-
     }
 
     isRamStoreLocked() {
@@ -102,6 +102,10 @@ class RamStore {
 
     getPassword() {
         return this.#password;
+    }
+
+    setPassword(password) {
+        this.#password = password;
     }
 
 }
@@ -151,8 +155,7 @@ class KeyringController {
      */
     async setUnlocked(password) {
 
-
-        let keyrings = this.store.isEmpty() ? [] : await this.store.decrypt(this.getVault(), password);
+        let keyrings = this.store.isEmpty() ? [] : JSON.parse(await this.store.decrypt(this.store.getVault(), password));
         this.ramStore.setUnlocked(keyrings, password);
 
     }
@@ -164,7 +167,7 @@ class KeyringController {
      */
     async submitPassword(password) {
         let keyrings = this.ramStore.getKeyrings();
-        await this.store.encrypt(keyrings, password);
+        await this.store.encrypt(JSON.stringify(keyrings), password);
     }
 
     /**
