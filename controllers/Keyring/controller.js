@@ -129,15 +129,7 @@ class RamStore {
 
 class KeyringController {
 
-    /**
-     * 
-     * @param {Obj} params 
-     */
-    constructor(params) {
-        /** Keyring Type Enum: Simple or HD*/
-        this.type = params.type;
-        /** State Object would be extended from a Emitter or Observable Class in Future*/
-        this.state = {};
+    constructor() {
         /** Encryption Module for: Derive, Encrypt & Decrypt with AES Algorithm using User's Password*/
         this.encryptor = implement(encryptor.SymmetricEncryptorInterface)(new encryptor.SymmetricEncryptor());
         /** Store Class which will persist Keyrings on Local Storage*/
@@ -234,9 +226,12 @@ class KeyringController {
     /**
      * Add New Account
      * @param {string} account A Username Account
+     * @param {KeyringType} type Keyring's Type
      */
-    addNewAccount(account) {
-
+    addNewAccount(account, type) {
+        let keyringClass = this.getKeyringByType(type);
+        let keyring = new keyringClass(account);
+        this.addNewKeyring(keyring);
     }
 
     /**
@@ -286,13 +281,13 @@ class KeyringController {
         let keyring;
         switch(type) {
             case KeyringType.SIMPLE_KEYRING:
-                keyring = new simpleKeyring.SimpleKeyring();
+                keyring = simpleKeyring.SimpleKeyring;
                 break;
             case KeyringType.HD_KEYRING:
-                keyring = new hdKeyring.HdKeyring();
+                keyring = hdKeyring.HdKeyring;
                 break;
             default:
-                keyring = new simpleKeyring.SimpleKeyring();
+                keyring = simpleKeyring.SimpleKeyring;
                 break;
         }
 

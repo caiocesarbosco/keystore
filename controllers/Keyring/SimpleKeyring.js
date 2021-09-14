@@ -1,3 +1,7 @@
+const jsstc = require('../../lib/jsstc/index.js');
+
+const keyGenerator = jsstc.keypair;
+
 /**
  * A Simple Keyring Class
  * @class Simple Keyring
@@ -8,37 +12,30 @@ class SimpleKeyring {
      * Constructor
      * @constructor
      */
-    constructor() {
-        this.wallet = [];
+    constructor(account) {
+        this.account = account;
+        this.wallet = keyGenerator();
     }
 
     /**
-     * serialize
+     * Get account
      */
-    serialize() {
-
+    getAccount() {
+        return this.account;
     }
 
     /**
-     * deserialize
+     * Get Public Keys
      */
-    deserialize() {
-
+    getPublicKey() {
+        return this.wallet.pub;
     }
 
     /**
-     * Add Account
-     * @param {string} account Username's Account
+     * Get Private Key
      */
-    addAccount(account) {
-
-    }
-
-    /**
-     * Get Accounts
-     */
-    getAccounts() {
-
+    getPrivateKey() {
+        return this.wallet.priv;
     }
 
     /**
@@ -46,22 +43,6 @@ class SimpleKeyring {
      * @param {string} account Username's Account
      */
     decryptMessage(account) {
-
-    }
-
-    /**
-     * Get Encryption Public Key
-     * @param {string} account Username's Account
-     */
-    getEncryptionPublicKey(account) {
-
-    }
-
-    /**
-     * Get Private Key
-     * @param {string} address Account Address
-     */
-    getPrivateKey(address) {
 
     }
 
@@ -80,14 +61,6 @@ class SimpleKeyring {
      removeAccount(account) {
 
     }
-
-    /**
-     * Generate Keypairs
-     */
-    generateKeypair() {
-
-    }
- 
 
 }
 
