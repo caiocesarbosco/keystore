@@ -139,3 +139,26 @@ test("Testing Lock followed by Unlock using wrong password", async () => {
     expect(keyringController.ramStore.isEmpty()).toBe(true);
 
 });
+
+test("Testing Duplicate Keyring", () => {
+    let params = {
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController(params);
+    let keyring = keyringController.getKeyringByType(keyringController.type);
+    expect(keyringController.checkForDuplicates(keyring)).toBe(false);
+    keyringController.addNewKeyring(keyring);
+    expect(keyringController.checkForDuplicates(keyring)).toBe(true);
+});
+
+test("Testing if duplicated keyring is not inserted on Keyring Array", () => {
+    let params = {
+        type: KeyringController.KeyringType.SIMPLE_KEYRING
+    };
+    let keyringController = new KeyringController.KeyringController(params);
+    let keyring = keyringController.getKeyringByType(keyringController.type);
+    keyringController.addNewKeyring(keyring);
+    keyringController.addNewKeyring(keyring);
+    expect(keyringController.ramStore.getKeyrings().length).toBe(1);
+
+});

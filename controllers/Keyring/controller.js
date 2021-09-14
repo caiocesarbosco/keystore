@@ -209,8 +209,9 @@ class KeyringController {
      */
     addNewKeyring(keyring) {
 
-        this.ramStore.addKeyring(keyring);
-        //if(this.checkForDuplicates())
+        if(this.checkForDuplicates(keyring) == false) {
+            this.ramStore.addKeyring(keyring);
+        }
 
     }
 
@@ -224,7 +225,9 @@ class KeyringController {
     /**
      * Check for Duplicate Keyrings
      */
-    checkForDuplicates() {
+    checkForDuplicates(keyring) {
+
+        return this.ramStore.getKeyrings().includes(keyring);
 
     }
 
