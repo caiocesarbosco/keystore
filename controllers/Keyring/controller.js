@@ -21,48 +21,99 @@ const KeyringType = {
 Object.freeze(KeyringType);
 
 /**
- * A Persitent Local Store Class to save Encrypted Keyrings
- * @class LocalStore
+ * @classdesc A Persitent Local Store Class to safely save Encrypted Keyrings
  */
 class LocalStore {
     #vault;
     #signature;
 
     constructor(encryptor) {
+        /**
+         * Hold's all serialized keyrings encrypted with Symmetric Key Derived by User's Password. 
+         * @type {Array}
+         */
         this.#vault = [];
-        this.signature = null;
+        /** 
+         * Vault's signature to quick check of User's password is right or even if vault has been corrupted.
+         * @type {Array}
+         */
+        this.#signature = null;
+        /**
+         * External encryptor module to handle symmetric encryption operations.
+         * @type {module}
+         */
         this.encryptor = encryptor;
     }
 
+    /**
+     * a Getter for Vault Object
+     * @returns {Array} Vault containg encrypted serialized keyrings data
+     */
     getVault() {
         return this.#vault;
     }
 
+    /**
+     * a Getter for Vault's Signature
+     * @returns {Array} returns Vault's Signature.
+     */
     getSignature() {
         return this.#signature;
     }
 
+    /**
+     * Checks if Vault Object is empty
+     * @returns {boolean} Returns true if Vault is empty. Otherwise it must return false. 
+     */
     isEmpty() {
         return this.#vault.length === 0;
     }
 
+    /**
+     * Flushes all persisted encrypted keyrings
+     */
     cleanVault() {
         this.#vault = [];
     }
 
+    /** 
+     * Encrypts a String Data using a symmetric encryption method provided by encryptor module
+     * See config.json and lib/encrypt/encrypt.js for more details.
+     * @async
+     * @param {String} data A String Data to be Encrypted
+     * @param {String} password User's Password 
+     */
     async encrypt(data, password) {
         this.#vault = await this.encryptor["encrypt"](data, password);
     }
 
+    /**
+     * Decrypts a Array Data using a symmetric decryption method provided by encryptor module
+     * See config.json and lib/encrypt/encrypt.js for more details.
+     * @param {Array} encryptedData Uint8 Array Buffer containing encrypted data
+     * @param {String} password User's Password 
+     * @returns {String} Decrypted Data as a String
+     */
     async decrypt(encryptedData, password) {
         let decryptedData = await this.encryptor["decrypt"](encryptedData, password);
         return decryptedData;
     }
 
+    /**
+     * Sign entire Vault (Encrypted Serialized Keyrings) using Signature method provided by encryptor module. 
+     * See config.json and lib/encrypt/encrypt.js for more details.
+     * @param {String} password User's Password 
+     */
     async signVault(password) {
         this.#signature = await this.encryptor["sign"](utils.bytesToASCIIString(this.getVault()), password);
     }
 
+    /**
+     * Verify Vault's Signature using Signature's Verification method provided by encryptor module. 
+     * See config.json and lib/encrypt/encrypt.js for more details.
+     * @param {String} password User's Password 
+     * @returns {boolean} Returns true if Vault's signature verifications has been succeed. Otherwise returns false. 
+     */
     async verifyVaultSignature(password) {
         return await this.encryptor["verify"](password, this.getSignature(), utils.bytesToASCIIString(this.getVault()));
     }
@@ -264,14 +315,24 @@ class KeyringController {
      * @param {string} account A Username Account
      */
     getEncryptPublicKey(account) {
+        return this.getKeyringByAccount(account)["wallet"]["pub"];
+    }
+
+    /**
+     * Encrypt Message
+     * @param {string} account A Username Account
+     * @param {string} data data to be encrypted
+     */
+    encryptMessage(account, data) {
 
     }
 
     /**
      * Decrypt Message
-     * @param {string} account A Username Account
+     * @param {string} account A Username 
+     * @param {string} data data to be decrypted
      */
-    decryptMessage(account) {
+    decryptMessage(account, data) {
 
     }
 
