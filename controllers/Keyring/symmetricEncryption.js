@@ -33,16 +33,18 @@ class SymmetricEncryptor {
     }
 
     /**
-     * @param {string} password Username's Password 
-     * @param {string} data serialized Raw Keyring Data
+     * @param {String} password Username's Password 
+     * @param {String} data serialized Raw Keyring Data
+     * @returns {Array} returns buffer containing encrypted data
      */
     encrypt(password, data) {
         return this.encrypt(data, password);
     }
 
     /**
-     * @param {string} password Username's Password 
-     * @param {string} data serialized Encrypted Keyring Data
+     * @param {String} password Username's Password 
+     * @param {Array} data serialized Encrypted Keyring Data
+     * @returns {String} returns decrypted data as a string
      */
     decrypt(data, password) {
         return this.decrypt(data, password);
@@ -50,23 +52,26 @@ class SymmetricEncryptor {
 
     /**
      * @param {string} password Username's Password 
+     * @returns {Obj} returns a Object containing Two Symmetric Derived Keys: one for Signature other for Encryption Purposes. 
      */
     deriveKey(password) {
         return this.deriveKey(password);
     }
 
     /**
-     * @param data
-     * @param password
+     * @param {String} data Data be Signed
+     * @param {String} password Username's Password 
+     * @returns {Array} returns a buffer containing Signed Data
      */
      sign(data, password) {
         return this.sign(data, password);
      }
 
      /**
-      * @param password
-      * @param signedData
-      * @param data
+      * @param {String} password Username's Password 
+      * @param {Array} signedData buffer containing Signed Data
+      * @param {String} data raw data to be compared with signed Data
+      * @returns {boolean} return true if verification is right. Otherwise it must return false.
       */
      verify(password, signedData, data) {
         return this.verify(password, signedData, data);
