@@ -3,36 +3,47 @@ const jsstc = require('../../lib/jsstc/index.js');
 const keyGenerator = jsstc.keypair;
 
 /**
- * A Simple Keyring Class
- * @class Simple Keyring
+ * @classdesc A Simple Keyring Class. This Keyring can just hold keypairs that can't generate any other keypairs.
  */
 
 class SimpleKeyring {
+    
     /**
      * Constructor
      * @constructor
      */
     constructor(account) {
+        /**
+         * Account's Username
+         * @type {String}
+         */
         this.account = account;
+        /**
+         * A simple wallet holding Public and Private Keys
+         * @type {Obj}
+         */
         this.wallet = keyGenerator();
     }
 
     /**
-     * Get account
+     * account getter
+     * @returns Return Keyring's Account Username
      */
     getAccount() {
         return this.account;
     }
 
     /**
-     * Get Public Keys
+     * public key getter
+     * @returns Return Keyring's public key
      */
     getPublicKey() {
         return this.wallet.pub;
     }
 
     /**
-     * Get Private Key
+     * private key getter
+     * @returns Return Keyring's private key
      */
     getPrivateKey() {
         return this.wallet.priv;
