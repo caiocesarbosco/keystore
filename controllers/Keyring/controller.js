@@ -122,8 +122,7 @@ class LocalStore {
 
 
 /**
- * A Keyring class to handle Keyring's Operations just inside RAM Memory
- * @class RamStore
+ * @classdesc A Keyring class to handle Keyring's Operations just inside RAM Memory
  */
 
 class RamStore {
@@ -133,16 +132,37 @@ class RamStore {
     #keyrings;
 
     constructor() {
+        /**
+         * A flag to locking keyrings access on RAM memory.
+         * @type {boolean}
+         */
         this.#isLocked = true;
+        /**
+         * A array of Keyrings loaded on volatile memory. It can holds Simple Keyrings or Hd Keyrings together.
+         * @type {Array}
+         */
         this.#keyrings = [];
+        /**
+         * Verified User's Password loaded on volatile memory. 
+         * @type {String}
+         */
         this.#password = null;
     }
 
+    /**
+     * Locks Volatile Store: set isLocked to true, drops all elements from keyrings, drop password from volatile memory.
+     */
     setLocked() {
         this.#isLocked = true;
         this.#keyrings = [];
         this.#password = null;
     }
+
+    /**
+     * Unlocks volatile Store: enables keyrings and User's password into volatile memory, set isLocked flag to false.
+     * @param {Array} keyrings Fresh keyrings Array decrypted from Persistent Memory (Vault)
+     * @param {String} password  User's Password
+     */
 
     setUnlocked(keyrings, password) {
         keyrings.forEach(keyring => {
@@ -152,34 +172,65 @@ class RamStore {
         this.#isLocked = false;
     }
 
+    /**
+     * Checks if Volatile Store is Locked.
+     * @returns {boolean} return true if RamStore is locked. Otherwise it must return false.
+     */
     isRamStoreLocked() {
         return this.#isLocked;
     }
 
+    /**
+     * Add a Simple Keyring or Hd Keyring into volatile memory
+     * @param {Object} keyring Keyring Object 
+     */
     addKeyring(keyring) {
         this.#keyrings.push(keyring);
     }
 
+    /**
+     * Remove a Keyring from volatile memory by Username's Account
+     * @param {String} account Username's Account String 
+     */
     removeKeyring(account) {
         this.#keyrings = this.#keyrings.filter(elem => elem["account"] != account);
     }
 
+    /**
+     * Return All keyrings loaded into volatile memory as a Array of Keyring Objects.
+     * @returns {Array} return a Array of Keyring's Objects. It can have Simple and Hd Keyrings mixed.
+     */
     getKeyrings() {
         return this.#keyrings;
     }
 
+    /**
+     * Drop Keyrings from Volatile Memory.
+     */
     clearKeyrings() {
         this.#keyrings = [];
     }
 
+    /**
+     * Checks if Volatile Memory holds some Keyring.
+     * @returns {boolean} return true if no keyring is loaded. Otherwise it must return false.
+     */
     isEmpty() {
         return !this.#keyrings.length;
     }
 
+    /**
+     * User's Password Getter from Volatile Memory.
+     * @returns {String} return User's Password as a String or null if any password has been charged on volatile memory.
+     */
     getPassword() {
         return this.#password;
     }
 
+    /**
+     * Charges User's Password on Volatile's Memory
+     * @param {String} password 
+     */
     setPassword(password) {
         this.#password = password;
     }
