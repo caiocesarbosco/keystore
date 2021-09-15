@@ -7,14 +7,19 @@ const utils = require('../../lib/utils/utils.js');
 
 
 /**
- * Enum for Keyring Types:
- * 
- *      SIMPLE_KEYRING: A ring which holds simple independent's Keypairs.
- *      HD_KEYRING: A ring which holds Hierarchical Deterministics Keypairs.
+ * Enum for Keyring Types
  *      @enum Enums Keyrings Type
  */
 const KeyringType = {
+    /**
+     * A ring which holds simple independent's Keypairs.
+     * @type {number} 
+     */
     SIMPLE_KEYRING: 0,
+    /**
+     * A ring which holds Hierarchical Deterministics Keypairs.
+     * @type {number}
+     */
     HD_KEYRING:1
 };
 
@@ -238,26 +243,35 @@ class RamStore {
 }
 
 /**
- * @class Keyrings Controller
+ * @classdesc A Controller's Class to abstract all highlevel operations performed on Keyrings.
  */
 
 class KeyringController {
 
     constructor() {
-        /** Encryption Module for: Derive, Encrypt & Decrypt with AES Algorithm using User's Password*/
+        /**
+         *  Encryption Module for: Derive, Encrypt & Decrypt with AES Algorithm using User's Password
+         *  @type {module}
+         **/
         this.encryptor = implement(encryptor.SymmetricEncryptorInterface)(new encryptor.SymmetricEncryptor());
-        /** Store Class which will persist Keyrings on Local Storage*/
+        /**
+         * Store Class which will persist Keyrings on Local Storage
+         * @type {LocalStore}
+         **/
         this.store = new LocalStore(this.encryptor);
-        /** Ram Store Class which will temporary holds keyrings on an Local Array of Keyrings*/
+        /**
+         * Ram Store Class which will temporary holds keyrings on an Local Array of Keyrings
+         * @type {RamStore}
+         **/
         this.ramStore = new RamStore();
     }
 
     /**
-     *      assert null on local password;
-     *      erase keyrings Array values;
-     *      emit a "lock" event for all listeners;
-     *      update any internal state;
-     * @emits lock event
+     *  Assert null on local password;
+     *  Encrypt and persists encrypted keyrings on Local Store Vault.
+     *  Sign's Vault's Data and persist's it.
+     *  Erase keyrings elements from Volatile's Memory;
+     *  @async
      */
     async setLocked() {
         await this.store.encrypt(JSON.stringify(this.ramStore.getKeyrings()), this.ramStore.getPassword());
@@ -266,12 +280,11 @@ class KeyringController {
     }
 
     /**
-     *      
-     *      emit "unlock" event for all listeners;
-     *      update any internal state;
-     *      restore on RamStore the Persisted User Keyrings;
-     * @emits unlock event
-     * @param password
+     * Verifies if User's Password is Right by Vault's Signature. If it is ok so:    
+     * Restore on RamStore the Persisted User Keyrings;
+     * Enables User's Password on Volatile Memory;
+     * @param {String} password User's Password 
+     * @async
      */
     async setUnlocked(password) {
 
@@ -291,8 +304,9 @@ class KeyringController {
 
     /**
      * 
-     *      submit User's password to encrypt all Keyring Array as a Vault into Local Store;
-     *      @param {string} password User's Password
+     * Submit User's password to encrypt all Keyring Array as a Vault into Local Store;
+     * @param {string} password User's Password
+     * @async
      */
     async submitPassword(password) {
         let keyrings = this.ramStore.getKeyrings();
@@ -303,16 +317,17 @@ class KeyringController {
 
     /**
      * 
-     *      verify User's password checking signature of encrypted data on Local Store;
-     *      @param {string} password User's Password
+     * Verify User's password checking signature of encrypted data on Local Store;
+     * @param {string} password User's Password
+     * @async
      */
     async verifyPassword(password) {
         return await this.store.verifyVaultSignature(password);
     }
 
     /**
-     *      Add a new Keyring
-     *      @param {Obj} keyring 
+     * Add a new Keyring on volatile memory. Duplicated Data is discarded.
+     * @param {Obj} keyring Keyring 
      */
     addNewKeyring(keyring) {
 
@@ -323,7 +338,9 @@ class KeyringController {
     }
 
     /**
-     * Check for Duplicate Keyrings
+     * Check if keyring exists on volatile memory.
+     * @param {Obj} keyring Keyring
+     * @returns {boolen} return true if keyring is duplicated on RAM Memory. Otherwise it must return false.
      */
     checkForDuplicates(keyring) {
 
@@ -332,8 +349,8 @@ class KeyringController {
     }
 
     /**
-     * Add New Account
-     * @param {string} account A Username Account
+     * Add New Account on Volatile Memory.
+     * @param {String} account Account's Username
      * @param {KeyringType} type Keyring's Type
      */
     addNewAccount(account, type) {
@@ -343,8 +360,9 @@ class KeyringController {
     }
 
     /**
-     * Export Account
-     * @param {string} account A Username Account
+     * Export Keyring by Account's Username
+     * @param {String} account Account's Username
+     * @returns {Obj} returns Keyring Object
      */
     exportAccount(account) {
 
@@ -353,8 +371,9 @@ class KeyringController {
     }
 
     /**
-     * Remove Account
-     * @param {string} account A Username Account
+     * Remove Account's Keyring from Volatile and Persistent Memory by Account's Username.
+     * @param {String} account Account's Username
+     * @async
      */
     async removeAccount(account) {
         this.ramStore.removeKeyring(account);
@@ -362,25 +381,26 @@ class KeyringController {
     }
 
     /**
-     * get Encryption Public Keys
-     * @param {string} account A Username Account
+     * get Encryption Public Keys by Account's Username
+     * @param {String} account Account's Username
+     * @returns {String} returns Public Key
      */
     getEncryptPublicKey(account) {
         return this.getKeyringByAccount(account)["wallet"]["pub"];
     }
 
     /**
-     * Encrypt Message
-     * @param {string} account A Username Account
-     * @param {string} data data to be encrypted
+     * Encrypt data using Public Key from Account's Keyring
+     * @param {String} account Account's Username
+     * @param {String} data data to be encrypted
      */
     encryptMessage(account, data) {
 
     }
 
     /**
-     * Decrypt Message
-     * @param {string} account A Username 
+     * Decrypt data using Private Key from Account's Keyring
+     * @param {string} account Account's Username
      * @param {string} data data to be decrypted
      */
     decryptMessage(account, data) {
@@ -390,6 +410,7 @@ class KeyringController {
     /**
      * Get Keyring Class by Type
      * @param {KeyringType} type Keyring Type
+     * @returns {Class} return a Keyring Type Class
      */
     getKeyringByType(type) {
         let keyring;
@@ -410,7 +431,8 @@ class KeyringController {
     }
 
     /**
-     * get Accounts
+     * get a array of all Account's Username.
+     * @returns {Array} returns a Array containing all Account's Username Name Extracted by Volatile Memory's Keyrings 
      */
     getAccounts() {
         return this.ramStore.getKeyrings().map(elem => elem["account"]);
@@ -418,14 +440,20 @@ class KeyringController {
 
     /**
      * Get Keyring by Account
-     * @param {string} account A Username Account
+     * @param {String} account Account's Username
+     * @returns {Obj} returns a Keyring Obj from volatile memory filtered by Account's Username
      */
     getKeyringByAccount(account) {
         return this.ramStore.getKeyrings().filter(elem => elem["account"] === account);
     }
 
     /**
-     * Persist Keyrings
+     * Persists All Keyrings from volatile memory to persistent memory (Vault) encrypting it with
+     * symmetric key derived from User's Password. This method is similar as submitPassword method.
+     * Meanwhile submitPassword receives a password as a parameter, persistsAllKeyrings uses password
+     * charged on volatile memory. submitPassword must be used to submit User's Password entry, meanwhile
+     * persistsAllKeyrings is used to persists all volatile data to Vault.
+     * @async
      */
     async persistsAllKeyrings() {
         let keyrings = this.ramStore.getKeyrings();
@@ -434,7 +462,7 @@ class KeyringController {
     }
 
     /**
-     * Clear All Keyrings
+     * Purges all Keyrings Data either from volatile and persistent memory
      */
     clearKeyrings() {
         this.store.cleanVault();
@@ -442,21 +470,21 @@ class KeyringController {
     }
 
     /**
-     * Create New Vault and Keychain
+     * Create New Vault
      */
-    createNewVaultAndKeychain() {
+    createNewVault() {
 
     }
 
     /**
-     * Create New Vault and Restore
+     * Create New Vault, Restoring Keyrings by a Import Method
      */
     createNewVaultAndRestore() {
 
     }
 
     /**
-     * Create First Key Tree
+     * Create a Root Key for a HD Keyring
      */
     createFirstKeyTree() {
 
