@@ -5,7 +5,7 @@ const utils = require('../../lib/utils/utils.js');
  */
  class Profile {
 
-    constructor(name, data, encryptor, password) {
+    constructor(name, data, encryptor, password, isNew) {
 
         return(async () => {
             /**
@@ -19,18 +19,18 @@ const utils = require('../../lib/utils/utils.js');
              */
             this.encryptor = encryptor;
 
-            if(data == null) {
+            if(isNew == false) {
                 /**
                  * Hold's all profile data encrypted with Symmetric Key Derived by User's Password. 
                  * @type {Array}
                  */
-                this.data = "mock";//localStore.getProfile["data"];
+                this.data = data["data"];
         
                 /** 
                  * Profile Data Signature to quick check of User's password is right or even if vault has been corrupted.
                  * @type {Array}
                  */
-                this.signature = "mock"; //localStore.getProfile["signature"];
+                this.signature = data["signature"];
             }
 
             else {
