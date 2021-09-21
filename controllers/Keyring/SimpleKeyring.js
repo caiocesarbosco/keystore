@@ -2,35 +2,83 @@ const jsstc = require('../../lib/jsstc/index.js');
 
 const keyGenerator = jsstc.keypair;
 
+function isValid(param) {
+    if(param != null && param != undefined)
+        return true;
+    else
+        return false;
+}
+
 /**
- * @classdesc A Simple Keyring Class. This Keyring can just hold keypairs that can't generate any other keypairs.
+ * @classdesc A Simple Keyring Class.
  */
 
 class SimpleKeyring {
+
+    #wallet;
     
     /**
      * Constructor
      * @constructor
      */
-    constructor(account) {
+    constructor(userName, masterKey) {
+
+        let account = {
+            account: userName,
+            type: "master",
+            masterKey: masterKey
+        };
+
         /**
-         * Account's Username
-         * @type {String}
-         */
-        this.account = account;
-        /**
-         * A simple wallet holding Public and Private Keys
+         * Array of Account Dictionaries
          * @type {Obj}
          */
-        this.wallet = keyGenerator();
+        this.#wallet = [
+            {
+                "account": account
+            }
+        ];
     }
 
     /**
-     * account getter
-     * @returns Return Keyring's Account Username
+     * accounts getter
+     * @returns Return Keyring's Account's Usernames
      */
-    getAccount() {
-        return this.account;
+    getAccounts() {
+        return this.#wallet.map((elem) => elem["account"].account);
+    }
+
+    /**
+     * add New Account into Keyring
+     * @param {Obj} account New account
+     */
+    addAccount(userName, data, type) {
+
+        if(isValid(userName) && isValid(data)) {
+
+            let account = {};
+
+            switch(type) {
+                default:
+                    account = {
+                        account: userName,
+                        type: "subaccount",
+                        masterKey: data
+                    };
+            }
+
+            this.#wallet.push({
+                "account": account
+            });
+            console.log("Added Account: " + account);
+            console.log("Keyring: " + this.#wallet);
+
+        }
+
+        else {
+            console.log("Invalid Account Data");
+        }
+        
     }
 
     /**
@@ -38,7 +86,7 @@ class SimpleKeyring {
      * @returns Return Keyring's public key
      */
     getPublicKey() {
-        return this.wallet.pub;
+        //return this.wallet.pub;
     }
 
     /**
@@ -46,7 +94,7 @@ class SimpleKeyring {
      * @returns Return Keyring's private key
      */
     getPrivateKey() {
-        return this.wallet.priv;
+        //return this.wallet.priv;
     }
 
     /**
