@@ -4,6 +4,7 @@ const Encryptor = require('../controllers/Keyring/symmetricEncryption.js');
 const Profile = require('../controllers/Keyring/Profile.js');
 const implementjs = require('implement-js');
 const implement = implementjs.default;
+const utils = require('../lib/utils/utils.js');
 
 test("Testing Profile Constructor with New Profile", async () => {
     let encryptor = implement(Encryptor.SymmetricEncryptorInterface)(new Encryptor.SymmetricEncryptor());
@@ -14,10 +15,11 @@ test("Testing Profile Constructor with New Profile", async () => {
 });
 
 test("Testing Profile Constructor with existed Profile", async () => {
-    let keyring = new SimpleKeyring.SimpleKeyring("User1", "MasterKey", "", false);
+    let mock = "{\"data\":\"123456789\", \"signature\":\"987654321\"}";
+    let keyring = new SimpleKeyring.SimpleKeyring("User1", "MasterKey");
     let encryptor = implement(Encryptor.SymmetricEncryptorInterface)(new Encryptor.SymmetricEncryptor());
-    let profile = await new Profile.Profile("Profile 1", keyring.getKeyring(), encryptor, "1234", false);
+    let profile = await new Profile.Profile("Profile 1", mock, encryptor, "1234", false);
     expect(profile.getName()).toStrictEqual("Profile 1");
-    expect(profile.getData()).toBe(mock["data"]);
-    expect(profile.getSignature()).toBe(mock["signature"]);
+    expect(profile.getData()).toStrictEqual(utils.asciiToUint8Array("123456789"));
+    expect(profile.getSignature()).toStrictEqual(utils.asciiToUint8Array("987654321"));
 });
