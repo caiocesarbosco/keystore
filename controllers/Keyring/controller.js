@@ -4,6 +4,8 @@ const implement = implementjs.default;
 const simpleKeyring = require('./SimpleKeyring.js');
 const hdKeyring = require('./HdKeyring.js');
 const utils = require('../../lib/utils/utils.js');
+const localStore = require('../../lib/store/store.js');
+const Profile = require('./Profile.js');
 
 
 /**
@@ -12,12 +14,12 @@ const utils = require('../../lib/utils/utils.js');
  */
 const KeyringType = {
     /**
-     * A ring which holds simple independent's Keypairs.
+     * Simple Keyring (supported)
      * @type {number} 
      */
     SIMPLE_KEYRING: 0,
     /**
-     * A ring which holds Hierarchical Deterministics Keypairs.
+     * Hierarchical Deterministics Keyring (unsupported). In future version it should be supported or not.
      * @type {number}
      */
     HD_KEYRING:1
@@ -26,23 +28,12 @@ const KeyringType = {
 Object.freeze(KeyringType);
 
 /**
- * @classdesc A Persitent Local Store Class to safely save Encrypted Keyrings
+ * @classdesc A Persitent Local Store Class to safely save Encrypted Profile Data
  */
 class LocalStore {
-    #vault;
-    #signature;
 
     constructor(encryptor) {
-        /**
-         * Hold's all serialized keyrings encrypted with Symmetric Key Derived by User's Password. 
-         * @type {Array}
-         */
-        this.#vault = [];
-        /** 
-         * Vault's signature to quick check of User's password is right or even if vault has been corrupted.
-         * @type {Array}
-         */
-        this.#signature = null;
+
         /**
          * External encryptor module to handle symmetric encryption operations.
          * @type {module}
@@ -51,128 +42,203 @@ class LocalStore {
     }
 
     /**
+     * get Persisted Profiles Names
+     * @returns returns a array of profile's name strings.
+     */
+    getProfiles() {
+        return localStore.getProfileList();
+    }
+
+    /**
+     * Create a Profile
+     * @param {String} profileName Profile Name 
+     * @param {Obj} keyring Keyring
+     * @param {String} password Profile's Password
+     * @async
+     */
+    async createProfile(profileName, keyring, password) {
+        let profile = await new Profile.Profile(profileName, keyring, this.encryptor, password, true);
+        localStore.saveProfile(profileName, profile.serialize());
+        localStore.updateProfileList(profileName);
+    }
+
+    /**
+     * Drop all Profile Data. Password is checked first
+     * @param {String} profileName 
+     * @param {Password} password
+     * @async
+     */
+    async removeProfile(profileName, password) {
+        let verified = await this.verifyVaultSignature(profileName, password);
+        if(verified === true) {
+            localStore.dropProfile(profileName);
+        }
+    }
+
+    /**
      * a Getter for Vault Object
-     * @returns {Array} Vault containg encrypted serialized keyrings data
+     * @param {String} profileName Profile Name
+     * @returns {Obj} returns Vault containg {encryptedData, signature}
      */
-    getVault() {
-        return this.#vault;
+    getVault(profileName) {
+        return localStore.getProfile(profileName);
     }
 
     /**
-     * a Getter for Vault's Signature
-     * @returns {Array} returns Vault's Signature.
+     * Checks Profile's Password by Signature's Verification
+     * @param {String} profileName Profile Name
+     * @param {String} password Profile Password
+     * @returns {boolean} returns true if Vault's Signature Verification is performed correct. Return flase otherwise.
+     * @async
      */
-    getSignature() {
-        return this.#signature;
+    async verifyVaultSignature(profileName, password) {
+        let profileVault = this.getVault(profileName);
+        let profile = await new Profile.Profile(profileName, profileVault, this.encryptor, null, false);
+        return await profile.verifySignature(password);
     }
 
     /**
-     * Checks if Vault Object is empty
-     * @returns {boolean} Returns true if Vault is empty. Otherwise it must return false. 
+     * Get Decrypted Keyring Profile
+     * This private method should be used to get public or private Keyring Info
+     * @param {String} profileName Profile Name 
+     * @param {String} password Profile Password
+     * @returns {Obj} returns Decrypted Keyring
+     * @private
+     * @async
+     */
+    async #getKeyring(profileName, password) {
+        let vault = this.getVault(profileName);
+        let verified = await this.verifyVaultSignature(profileName, password);
+        if(verified === true) {
+            let keyring = await this.encryptor["decrypt"](utils.asciiToUint8Array(JSON.parse(vault).data), password);
+            return new simpleKeyring.SimpleKeyring("", "", JSON.parse(keyring), true);
+        }
+        return null;
+    }
+
+    /**
+     * Checks if Profile List is empty
+     * @returns {boolean} Returns true if Profile List is empty. Otherwise it must return false. 
      */
     isEmpty() {
-        return this.#vault.length === 0;
+        return this.getProfiles().length === 0;
     }
 
     /**
-     * Flushes all persisted encrypted keyrings
+     * Flushes all persisted profiles data.
      */
     cleanVault() {
-        this.#vault = [];
+        localStore.purge();
     }
 
-    /** 
-     * Encrypts a String Data using a symmetric encryption method provided by encryptor module
-     * See config.json and lib/encrypt/encrypt.js for more details.
+    /**
+     * Remove a account from a Profile
+     * @param {String} profileName Profile Name
+     * @param {String} account STC Account Username
+     * @param {String} password Profile Password
      * @async
-     * @param {String} data A String Data to be Encrypted
-     * @param {String} password User's Password 
      */
-    async encrypt(data, password) {
-        this.#vault = await this.encryptor["encrypt"](data, password);
+    async removeAccount(profileName, account, password) {
+        let keyring = await this.#getKeyring(profileName, password);
+        if(keyring != null) {
+            keyring.removeAccount(account);
+            localStore.dropProfile(profileName);
+            await this.createProfile(profileName, keyring.getKeyring(), password);
+        }
     }
 
     /**
-     * Decrypts a Array Data using a symmetric decryption method provided by encryptor module
-     * See config.json and lib/encrypt/encrypt.js for more details.
-     * @param {Array} encryptedData Uint8 Array Buffer containing encrypted data
-     * @param {String} password User's Password 
-     * @returns {String} Decrypted Data as a String
+     * Add new STC Account into selected profile
+     * @param {String} profileName Profile Name 
+     * @param {String} account STC Account Username
+     * @param {String} masterKey STC Account Masterkey
+     * @param {String} password Profile Password
+     * @async 
      */
-    async decrypt(encryptedData, password) {
-        let decryptedData = await this.encryptor["decrypt"](encryptedData, password);
-        return decryptedData;
+    async addNewAccount(profileName, account, masterKey, password) {
+        let keyring = await this.#getKeyring(profileName, password);
+        if(keyring != null) {
+            if(keyring.addAccount(account, masterKey) === true) {
+                localStore.dropProfile(profileName);
+                await this.createProfile(profileName, keyring.getKeyring(), password);
+            }
+        }
     }
 
     /**
-     * Sign entire Vault (Encrypted Serialized Keyrings) using Signature method provided by encryptor module. 
-     * See config.json and lib/encrypt/encrypt.js for more details.
-     * @param {String} password User's Password 
+     * Get Public Profile Data: an Array of Accounts Info containing: STC Account Username, Account Type.
+     * TODO: We must return Public Keys with it on next version.
+     * @param {String} profileName Profile Name 
+     * @param {String} password Profile Password
+     * @returns {Array} returns an Array of Accounts Info containing: STC Account Username, Account Type
+     * @async
      */
-    async signVault(password) {
-        this.#signature = await this.encryptor["sign"](utils.bytesToASCIIString(this.getVault()), password);
+    async getPublicInfo(profileName, password) {
+        let keyring = await this.#getKeyring(profileName, password);
+        return keyring === null ? [] : keyring.getPublicInfo(); 
     }
 
     /**
-     * Verify Vault's Signature using Signature's Verification method provided by encryptor module. 
-     * See config.json and lib/encrypt/encrypt.js for more details.
-     * @param {String} password User's Password 
-     * @returns {boolean} Returns true if Vault's signature verifications has been succeed. Otherwise returns false. 
+     * Get Private Account Data from a selected profile.
+     * TODO: We must return Private Keys with it on next version, instead just the masterkey.
+     * @param {String} profileName Profile Name 
+     * @param {String} account STC Account Username
+     * @param {String} password Profile Password
+     * @returns {String} returns Account's Masterkey of Selected Profile 
+     * @async
      */
-    async verifyVaultSignature(password) {
-        return await this.encryptor["verify"](password, this.getSignature(), utils.bytesToASCIIString(this.getVault()));
+    async getPrivateInfo(profileName, account, password) {
+        let keyring = await this.#getKeyring(profileName, password);
+        return keyring === null ? [] : keyring.getPrivateInfo(account); 
     }
+
 }
 
 
-
 /**
- * @classdesc A Keyring class to handle Keyring's Operations just inside RAM Memory
+ * @classdesc A Class to handle Public Profile Data Operations using RAM Memory
  */
 
 class RamStore {
 
     #password;
     #isLocked;
-    #keyrings;
+    #publickeyringData;
 
     constructor() {
         /**
-         * A flag to locking keyrings access on RAM memory.
+         * A flag to locking Public Profile Data access on RAM memory.
          * @type {boolean}
          */
         this.#isLocked = true;
         /**
-         * A array of Keyrings loaded on volatile memory. It can holds Simple Keyrings or Hd Keyrings together.
+         * Public Profile Data loaded on volatile memory.
          * @type {Array}
          */
-        this.#keyrings = [];
+        this.#publickeyringData = [];
         /**
-         * Verified User's Password loaded on volatile memory. 
+         * Verified Profile's Password loaded on volatile memory.
+         * TODO: We must check if we need hold password or not. If so, next versions 
+         * should have a mechanism to timeout password on RAM memory.
          * @type {String}
          */
         this.#password = null;
     }
 
     /**
-     * Locks Volatile Store: set isLocked to true, drops all elements from keyrings, drop password from volatile memory.
+     * Locks Volatile Store: set isLocked to true, drops all elements from publickeyringData, drop password from volatile memory.
      */
     setLocked() {
         this.#isLocked = true;
-        this.#keyrings = [];
+        this.#publickeyringData = [];
         this.#password = null;
     }
 
     /**
-     * Unlocks volatile Store: enables keyrings and User's password into volatile memory, set isLocked flag to false.
-     * @param {Array} keyrings Fresh keyrings Array decrypted from Persistent Memory (Vault)
-     * @param {String} password  User's Password
+     * Unlocks volatile Store: enables Profile's password into volatile memory, set isLocked flag to false.
+     * @param {String} password  Profile's Password
      */
-
-    setUnlocked(keyrings, password) {
-        keyrings.forEach(keyring => {
-            this.#keyrings.push(keyring);
-        });
+    setUnlocked(password) {
         this.#password = password;
         this.#isLocked = false;
     }
@@ -186,54 +252,49 @@ class RamStore {
     }
 
     /**
-     * Add a Simple Keyring or Hd Keyring into volatile memory
-     * @param {Object} keyring Keyring Object 
+     * Refresh Public Info available into volatile memory
+     * @param {Array} publicKeyring an Array containing Public Information for each Account Registered at selected Profile
      */
-    addKeyring(keyring) {
-        this.#keyrings.push(keyring);
+    refreshKeyringPublicInfo(publicKeyring) {
+        this.clearKeyrings();
+        publicKeyring.forEach(elem => {
+            this.#publickeyringData.push(elem);
+        });
     }
 
     /**
-     * Remove a Keyring from volatile memory by Username's Account
-     * @param {String} account Username's Account String 
+     * Return All Public Profile Data loaded into volatile memory as an Array of Pub Account's Data Objects.
+     * @returns {Array} returns an Array of Pub Account's Data Objects.
      */
-    removeKeyring(account) {
-        this.#keyrings = this.#keyrings.filter(elem => elem["account"] != account);
+    getPubKeyringData() {
+        return this.#publickeyringData;
     }
 
     /**
-     * Return All keyrings loaded into volatile memory as a Array of Keyring Objects.
-     * @returns {Array} return a Array of Keyring's Objects. It can have Simple and Hd Keyrings mixed.
-     */
-    getKeyrings() {
-        return this.#keyrings;
-    }
-
-    /**
-     * Drop Keyrings from Volatile Memory.
+     * Drop Pub Profile Data from Volatile Memory.
      */
     clearKeyrings() {
-        this.#keyrings = [];
+        this.#publickeyringData = [];
     }
 
     /**
-     * Checks if Volatile Memory holds some Keyring.
-     * @returns {boolean} return true if no keyring is loaded. Otherwise it must return false.
+     * Checks if Volatile Memory holds some Info.
+     * @returns {boolean} return true if no Data is loaded. Otherwise it must return false.
      */
     isEmpty() {
-        return !this.#keyrings.length;
+        return !this.#publickeyringData.length;
     }
 
     /**
-     * User's Password Getter from Volatile Memory.
-     * @returns {String} return User's Password as a String or null if any password has been charged on volatile memory.
+     * Profile's Password Getter from Volatile Memory.
+     * @returns {String} return Profile's Password as a String or null if any password has been charged on volatile memory or locked.
      */
     getPassword() {
         return this.#password;
     }
 
     /**
-     * Charges User's Password on Volatile's Memory
+     * Charges Profile's Password on Volatile's Memory
      * @param {String} password 
      */
     setPassword(password) {
@@ -243,167 +304,157 @@ class RamStore {
 }
 
 /**
- * @classdesc A Controller's Class to abstract all highlevel operations performed on Keyrings.
+ * @classdesc A Controller's Class to abstract all highlevel operations performed with Keyrings.
  */
 
 class KeyringController {
 
     constructor() {
         /**
-         *  Encryption Module for: Derive, Encrypt & Decrypt with AES Algorithm using User's Password
+         *  Encryption Module for: Derive, Encrypt & Decrypt with AES Algorithm using Profile's Password
          *  @type {module}
          **/
         this.encryptor = implement(encryptor.SymmetricEncryptorInterface)(new encryptor.SymmetricEncryptor());
         /**
-         * Store Class which will persist Keyrings on Local Storage
+         * Store Class which will persist Profile Data on Local Storage
          * @type {LocalStore}
          **/
         this.store = new LocalStore(this.encryptor);
         /**
-         * Ram Store Class which will temporary holds keyrings on an Local Array of Keyrings
+         * Ram Store Class which will temporary holds Public Profile Data as an Array of Public Account's Data of Selected Profile.
          * @type {RamStore}
          **/
         this.ramStore = new RamStore();
     }
 
     /**
-     *  Assert null on local password;
-     *  Encrypt and persists encrypted keyrings on Local Store Vault.
-     *  Sign's Vault's Data and persist's it.
-     *  Erase keyrings elements from Volatile's Memory;
-     *  @async
+     * Get All Available Profiles
+     * @returns {Array} returns an array of Profiles Name
      */
-    async setLocked() {
-        await this.store.encrypt(JSON.stringify(this.ramStore.getKeyrings()), this.ramStore.getPassword());
-        await this.store.signVault(this.ramStore.getPassword());
+    getProfilesName() {
+        return this.store.getProfiles();
+    }
+
+    /**
+     * Locks Volatile Store: set isLocked to true, drops all elements from publickeyringData, drop profile password from volatile memory.
+     */
+    setLocked() {
         this.ramStore.setLocked();
     }
 
     /**
      * Verifies if User's Password is Right by Vault's Signature. If it is ok so:    
-     * Restore on RamStore the Persisted User Keyrings;
-     * Enables User's Password on Volatile Memory;
+     * Restore on RamStore the Persisted Profile Public Account Data;
+     * Enables Profile's Password on Volatile Memory;
+     * @param {String} profile Profile Name
      * @param {String} password User's Password 
      * @async
      */
-    async setUnlocked(password) {
+    async setUnlocked(profile, password) {
 
         if (this.store.isEmpty()) {
-            this.ramStore.setUnlocked([], password);
+            this.ramStore.refreshKeyringPublicInfo("");
+            await this.ramStore.setUnlocked(profile, password);
             return;
         }
 
-        let rightPassword = await this.store.verifyVaultSignature(password);
+        let rightPassword = await this.store.verifyVaultSignature(profile, password);
         if (rightPassword === true ) {
-            let keyrings = JSON.parse(await this.store.decrypt(this.store.getVault(), password));
-            this.ramStore.clearKeyrings();
-            this.ramStore.setUnlocked(keyrings, password);
+            let publicKeyring = await this.store.getPublicInfo(profile, password);
+            this.ramStore.refreshKeyringPublicInfo(publicKeyring);
+            await this.ramStore.setUnlocked(profile, password);
         }
 
     }
 
     /**
-     * 
-     * Submit User's password to encrypt all Keyring Array as a Vault into Local Store;
-     * @param {string} password User's Password
+     * Create New Profile
+     * @param {String} profile Profile Name 
+     * @param {String} account Account Username
+     * @param {String} masterkey Master Key 
+     * @param {String} type type
      * @async
      */
-    async submitPassword(password) {
-        let keyrings = this.ramStore.getKeyrings();
-        await this.store.encrypt(JSON.stringify(keyrings), password);
-        await this.store.signVault(password);
-        this.ramStore.setPassword(password);
+    async createProfile(profile, account, masterkey, password) {
+        let keyringClass = this.getKeyringByType(KeyringType.SIMPLE_KEYRING);
+        let keyring = new keyringClass(account, masterkey);
+        await this.store.createProfile(profile, keyring.getKeyring(), password);
+        let publicKeyring = await this.store.getPublicInfo(profile, password);
+        await this.ramStore.refreshKeyringPublicInfo(publicKeyring);
     }
 
     /**
-     * 
-     * Verify User's password checking signature of encrypted data on Local Store;
-     * @param {string} password User's Password
-     * @async
-     */
-    async verifyPassword(password) {
-        return await this.store.verifyVaultSignature(password);
-    }
-
-    /**
-     * Add a new Keyring on volatile memory. Duplicated Data is discarded.
-     * @param {Obj} keyring Keyring 
-     */
-    addNewKeyring(keyring) {
-
-        if(this.checkForDuplicates(keyring) == false) {
-            this.ramStore.addKeyring(keyring);
-        }
-
-    }
-
-    /**
-     * Check if keyring exists on volatile memory.
-     * @param {Obj} keyring Keyring
-     * @returns {boolen} return true if keyring is duplicated on RAM Memory. Otherwise it must return false.
-     */
-    checkForDuplicates(keyring) {
-
-        return this.ramStore.getKeyrings().includes(keyring);
-
-    }
-
-    /**
-     * Add New Account on Volatile Memory.
+     * Add New Account on Profile. Update Public Account in Volatile Memory
+     * @param {String} profile Profile Name
      * @param {String} account Account's Username
-     * @param {KeyringType} type Keyring's Type
+     * @param {String} masterKey MasterKey
+     * @param {String} password Profile Password
+     * @async
      */
-    addNewAccount(account, type) {
-        let keyringClass = this.getKeyringByType(type);
-        let keyring = new keyringClass(account);
-        this.addNewKeyring(keyring);
+    async addNewAccount(profile, account, masterkey, password) {
+        await this.store.addNewAccount(profile, account, masterkey, password);
+        let publicKeyring = await this.store.getPublicInfo(profile, password);
+        this.ramStore.refreshKeyringPublicInfo(publicKeyring);
+    }
+
+    /**
+     * Remove Profile's Account from Volatile and Persistent Memory by STC Account's Username.
+     * @param {String} profile Profile Name
+     * @param {String} account Account's Username
+     * @param {String} password Profile Password
+     * @async
+     */
+     async removeAccount(profile, account, password) {
+        await this.store.removeAccount(profile, account, password);
+        let publicKeyring = await this.store.getPublicInfo(profile, password);
+        this.ramStore.refreshKeyringPublicInfo(publicKeyring);
+
     }
 
     /**
      * Export Keyring by Account's Username
+     * @param {String} profile Profile Name
      * @param {String} account Account's Username
-     * @returns {Obj} returns Keyring Object
-     */
-    exportAccount(account) {
-
-        return this.getKeyringByAccount(account);
-
-    }
-
-    /**
-     * Remove Account's Keyring from Volatile and Persistent Memory by Account's Username.
-     * @param {String} account Account's Username
+     * @param {String} password Profile's Password
+     * @returns {String} returns STC Account Masterkey from selected Profile
+     * TODO: Return all Private Keys not just Masterkey
      * @async
+     * 
      */
-    async removeAccount(account) {
-        this.ramStore.removeKeyring(account);
-        await this.persistsAllKeyrings();
+    async exportAccount(profile, account, password) {
+
+        return this.store.getPrivateInfo(profile, account, password);
+
     }
 
     /**
-     * get Encryption Public Keys by Account's Username
+     * get Encryption Public Keys by STC Account's Username from selected Profile
+     * @param {String} profile Profile Name
      * @param {String} account Account's Username
+     * @param {string} password Profile Password
      * @returns {String} returns Public Key
      */
-    getEncryptPublicKey(account) {
-        return this.getKeyringByAccount(account)["wallet"]["pub"];
+    getEncryptPublicKey(profile, account, password) {
+        //return this.getKeyringByAccount(account)["wallet"]["pub"];
     }
 
     /**
-     * Encrypt data using Public Key from Account's Keyring
+     * Encrypt data using Public Key from STC Account's Username from slected Profile
+     * @param {String} profile Profile Name
      * @param {String} account Account's Username
      * @param {String} data data to be encrypted
      */
-    encryptMessage(account, data) {
+    encryptMessage(profile, account, data) {
 
     }
 
     /**
-     * Decrypt data using Private Key from Account's Keyring
+     * Decrypt data using Private Key by STC Account's Username from selected Profile
+     * @param {String} profile Profile Name
      * @param {string} account Account's Username
      * @param {string} data data to be decrypted
      */
-    decryptMessage(account, data) {
+    decryptMessage(profile, account, data) {
 
     }
 
@@ -431,34 +482,17 @@ class KeyringController {
     }
 
     /**
-     * get a array of all Account's Username.
-     * @returns {Array} returns a Array containing all Account's Username Name Extracted by Volatile Memory's Keyrings 
+     * Get Accounts registered on selected profile
+     * @returns {Array} returns array contained registered accounts on selected profile.
      */
-    getAccounts() {
-        return this.ramStore.getKeyrings().map(elem => elem["account"]);
-    }
-
-    /**
-     * Get Keyring by Account
-     * @param {String} account Account's Username
-     * @returns {Obj} returns a Keyring Obj from volatile memory filtered by Account's Username
-     */
-    getKeyringByAccount(account) {
-        return this.ramStore.getKeyrings().filter(elem => elem["account"] === account);
-    }
-
-    /**
-     * Persists All Keyrings from volatile memory to persistent memory (Vault) encrypting it with
-     * symmetric key derived from User's Password. This method is similar as submitPassword method.
-     * Meanwhile submitPassword receives a password as a parameter, persistsAllKeyrings uses password
-     * charged on volatile memory. submitPassword must be used to submit User's Password entry, meanwhile
-     * persistsAllKeyrings is used to persists all volatile data to Vault.
-     * @async
-     */
-    async persistsAllKeyrings() {
-        let keyrings = this.ramStore.getKeyrings();
-        await this.store.encrypt(JSON.stringify(keyrings), this.ramStore.getPassword());
-        await this.store.signVault(this.ramStore.getPassword());
+    getAccounts(profile) {
+        let accounts = [];
+        this.ramStore.getPubKeyringData().forEach(
+            elem => {
+                accounts.push(elem.account);
+            }
+        );
+        return accounts;
     }
 
     /**
@@ -468,29 +502,6 @@ class KeyringController {
         this.store.cleanVault();
         this.ramStore.clearKeyrings();
     }
-
-    /**
-     * Create New Vault
-     */
-    createNewVault() {
-
-    }
-
-    /**
-     * Create New Vault, Restoring Keyrings by a Import Method
-     */
-    createNewVaultAndRestore() {
-
-    }
-
-    /**
-     * Create a Root Key for a HD Keyring
-     */
-    createFirstKeyTree() {
-
-    }
-
-
 }
 
 module.exports = {
