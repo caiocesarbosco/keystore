@@ -21,23 +21,39 @@ class SimpleKeyring {
      * Constructor
      * @constructor
      */
-    constructor(userName, masterKey) {
+    constructor(userName, masterKey, obj, exist) {
 
-        let account = {
-            account: userName,
-            type: "master",
-            masterKey: masterKey
-        };
+        if(exist === true) {
 
-        /**
-         * Array of Account Dictionaries
-         * @type {Obj}
-         */
-        this.#wallet = [
-            {
-                "account": account
-            }
-        ];
+            this.#wallet = [];
+            obj.forEach(element => {
+                this.#wallet.push({
+                    "account": element
+                });
+            });
+
+        }
+
+        else {
+
+            let account = {
+                account: userName,
+                type: "master",
+                masterKey: masterKey
+            };
+    
+            /**
+             * Array of Account Dictionaries
+             * @type {Obj}
+             */
+            this.#wallet = [
+                {
+                    "account": account
+                }
+            ];
+
+        }
+        
     }
 
     /**
@@ -49,6 +65,14 @@ class SimpleKeyring {
     }
 
     /**
+     * keyring getter
+     * @returns Return Keyring
+     */
+    getKeyring() {
+        return this.#wallet.map((elem) => elem["account"]);
+    }
+
+    /**
      * add New Account into Keyring
      * @param {Obj} account New account
      */
@@ -56,27 +80,32 @@ class SimpleKeyring {
 
         if(isValid(userName) && isValid(data)) {
 
-            let account = {};
+            if(this.getKeyring().find(elem => elem["account"] == userName) === undefined) {
 
-            switch(type) {
-                default:
-                    account = {
-                        account: userName,
-                        type: "subaccount",
-                        masterKey: data
-                    };
+                let account = {};
+
+                switch(type) {
+                    default:
+                        account = {
+                            account: userName,
+                            type: "subaccount",
+                            masterKey: data
+                        };
+                }
+
+                this.#wallet.push({
+                    "account": account
+                });
+                return true;
             }
-
-            this.#wallet.push({
-                "account": account
-            });
-            console.log("Added Account: " + account);
-            console.log("Keyring: " + this.#wallet);
+            else {
+                return false;
+            }
 
         }
 
         else {
-            console.log("Invalid Account Data");
+            return false;
         }
         
     }
@@ -85,16 +114,27 @@ class SimpleKeyring {
      * public key getter
      * @returns Return Keyring's public key
      */
-    getPublicKey() {
-        //return this.wallet.pub;
+    getPublicInfo() {
+        let publicInfo = [];
+        this.getKeyring().forEach(
+            elem => {
+                publicInfo.push({
+                    "account": elem.account,
+                    "type": elem.type
+                });
+            }
+        );
+        return publicInfo;
     }
 
     /**
      * private key getter
+     * @param {String} username Account's Username
      * @returns Return Keyring's private key
      */
-    getPrivateKey() {
-        //return this.wallet.priv;
+    getPrivateInfo(userName) {
+        let account = this.getKeyring().find(elem => elem["account"] == userName);
+        return account === undefined ? [] : account.masterKey;
     }
 
     /**
@@ -118,7 +158,14 @@ class SimpleKeyring {
      * @param {string} account Username's Account
      */
      removeAccount(account) {
-
+        let keyring = this.getKeyring();
+        keyring = keyring.filter(elem => elem["account"] != account);
+        this.#wallet = [];
+        keyring.forEach(element => {
+            this.#wallet.push({
+                "account": element
+            });
+        });
     }
 
 }
