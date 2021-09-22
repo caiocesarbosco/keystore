@@ -16,6 +16,7 @@ const utils = require('../../lib/utils/utils.js');
 
             /**
              * Encryptor Module
+             * @type {module}
              */
             this.encryptor = encryptor;
 
@@ -24,26 +25,27 @@ const utils = require('../../lib/utils/utils.js');
                  * Hold's all profile data encrypted with Symmetric Key Derived by User's Password. 
                  * @type {Array}
                  */
-                this.data = data["data"];
+                this.data = utils.asciiToUint8Array(JSON.parse(data).data);
         
                 /** 
                  * Profile Data Signature to quick check of User's password is right or even if vault has been corrupted.
                  * @type {Array}
                  */
-                this.signature = data["signature"];
+                this.signature = utils.asciiToUint8Array(JSON.parse(data).signature);
             }
 
             else {
-                /**
-                 * Hold's all profile data encrypted with Symmetric Key Derived by User's Password. 
-                 * @type {Array}
-                 */
-                this.data = await encryptor["encrypt"](data, password);
-                /** 
-                 * Profile Data Signature to quick check of User's password is right or even if vault has been corrupted.
-                 * @type {Array}
-                 */
-                this.signature = await encryptor["sign"](this.data, password);
+                //
+                // * Hold's all profile data encrypted with Symmetric Key Derived by User's Password. 
+                // * @type {Array}
+                // */
+                this.data = await this.encryptor["encrypt"](JSON.stringify(data), password);
+
+                // 
+                // * Profile Data Signature to quick check of User's password is right or even if vault has been corrupted.
+                // * @type {Array}
+                // */
+                this.signature = await this.encryptor["sign"](utils.bytesToASCIIString(this.data), password);
             }
 
             return this;
@@ -77,7 +79,7 @@ const utils = require('../../lib/utils/utils.js');
 
     /**
      * set Profile's Signature
-     * @param {Array} data Signed Data
+     * @param {Array} sign Signed Data
      */
     setSignature(sign) {
         this.signature = sign;
@@ -92,17 +94,22 @@ const utils = require('../../lib/utils/utils.js');
     }
 
     /**
-     * Verify Signature using Profile Passowrd
+     * Verify Signature using Profile Password
+     * @param {String} password Profile Password
      * @returns {boolean} returns true if Password matches. False otherwise.
      */
     async verifySignature(password) {
         return await this.encryptor["verify"](password, this.getSignature(), utils.bytesToASCIIString(this.getData()));
     }
 
+    /**
+     * Serialize Encrypted Profile Data and Signature as a String 
+     * @returns {String} returns a serialized string containing encrypted profile data and signature.
+     */
     serialize() {
         let obj = {
-            data: this.getData(),
-            signature: this.getSignature() 
+            data: utils.bytesToASCIIString(this.getData()),
+            signature: utils.bytesToASCIIString(this.getSignature())
         };
 
         return JSON.stringify(obj);
