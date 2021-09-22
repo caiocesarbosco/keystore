@@ -1,0 +1,31 @@
+Keystore
+
+A JS Module for safely storing STC Keys on Local Storage and transacts on STC Network.
+
+v1.0
+
+    * Create Profile:
+          a. Import STC Username Account
+          b. Import STC Masterkey Account
+          c. Choose a Profile's Password as a secret used for AES Encryptor.
+          d. Encrypts Profile Data on Local Storage.
+          
+    * Add Account on Selected Profile.
+    
+    * Remove Account from Selected Profile.
+    
+    * Delete Profile
+    
+    * Get Profiles
+    
+    * Get Profile Accounts
+    
+    * Get Profile Public Info (STC Account Username, Account Type). On next version Public Keys must be included.
+    
+    * Get Profile Private Info (Masterkey). On next version this call is gonna be forked as: Get Profile Private Key (KeyType, Account)
+    
+    * Verify Profile Password
+    
+    * Lock/Unlock Keystore
+    
+    
