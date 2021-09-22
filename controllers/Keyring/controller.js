@@ -362,7 +362,7 @@ class KeyringController {
         if (rightPassword === true ) {
             let publicKeyring = await this.store.getPublicInfo(profile, password);
             this.ramStore.refreshKeyringPublicInfo(publicKeyring);
-            await this.ramStore.setUnlocked(profile, password);
+            await this.ramStore.setUnlocked(password);
         }
 
     }
